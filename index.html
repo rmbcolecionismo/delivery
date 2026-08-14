@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout Delivery</title>
+  <!-- 1. Carrega o SDK oficial do Supabase via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-weight: bold; margin-bottom: 4px; }
+    input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { background-color: #25D366; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+    button:hover { background-color: #1EBE5D; }
+  </style>
+</head>
+<body>
+
+  <h2>Finalizar Pedido</h2>
+
+  <form id="formCheckout">
+    <div class="form-group">
+      <label for="nome">Seu Nome:</label>
+      <input type="text" id="nome" required placeholder="Ex: João Silva">
+    </div>
+
+    <div class="form-group">
+      <label for="telefone">WhatsApp / Telefone:</label>
+      <input type="tel" id="telefone" required placeholder="Ex: 11999999999">
+    </div>
+
+    <div class="form-group">
+      <label for="endereco">Endereço de Entrega:</label>
+      <input type="text" id="endereco" required placeholder="Rua, Número, Bairro e Apto">
+    </div>
+
+    <div class="form-group">
+      <label for="pagamento">Forma de Pagamento:</label>
+      <select id="pagamento">
+        <option value="Pix">Pix</option>
+        <option value="Cartão de Crédito">Cartão de Crédito</option>
+        <option value="Cartão de Débito">Cartão de Débito</option>
+        <option value="Dinheiro">Dinheiro</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="observacoes">Observações (Opcional):</label>
+      <textarea id="observacoes" placeholder="Ex: Tirar cebola, campainha quebrada"></textarea>
+    </div>
+
+    <button type="submit" id="btnFinalizar">Confirmar e Enviar pelo WhatsApp</button>
+  </form>
+
+  <script>
+    // -------------------------------------------------------------
+    // 1. CONFIGURAÇÃO DO SUPABASE E DO RESTAURANTE
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "https://shiexpkmmiwsaspdqbok.supabase.co"; // Cole a URL do seu Supabase
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; // Cole a chave ANON do seu Supabase
+    const TELEFONE_RESTAURANTE = "+351962634522"; // Digite o número com DDD e 55 na frente
+
+    // Inicializa o cliente do Supabase
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Exemplo de carrinho mockado (geralmente gerado na tela do cardápio)
+    const carrinho = [
+      { produto_id: "p1", nome: "X-Burguer Artesanal", qtd: 2, preco: 28.90 },
+      { produto_id: "p2", nome: "Refrigerante Lata", qtd: 1, preco: 6.00 }
+    ];
+    const taxaEntrega = 5.00;
+
+    // -------------------------------------------------------------
+    // 2. LÓGICA DE EXECUÇÃO DA ETAPA 2
+    // -------------------------------------------------------------
+    document.getElementById('formCheckout').addEventListener('submit', async function(e) {
+      e.preventDefault(); // Impede o recarregamento da página
+
+      const btn = document.getElementById('btnFinalizar');
+      btn.innerText = "Processando pedido...";
+      btn.disabled = true;
+
+      // A. Coleta dados do formulário
+      const clienteNome = document.getElementById('nome').value;
+      const clienteTelefone = document.getElementById('telefone').value;
+      const enderecoEntrega = document.getElementById('endereco').value;
+      const formaPagamento = document.getElementById('pagamento').value;
+      const observacoes = document.getElementById('observacoes').value;
+
+      // B. Calcula totais
+      const subtotal = carrinho.reduce((acc, item) => acc + (item.preco * item.qtd), 0);
+      const total = subtotal + taxaEntrega;
+
+      try {
+        // C. PASSO 1: Salva no Supabase na tabela 'pedidos'
+        const { data, error } = await _supabase
+          .from('pedidos')
+          .insert([
+            {
+              cliente_nome: clienteNome,
+              cliente_telefone: clienteTelefone,
+              endereco_entrega: enderecoEntrega,
+              itens: carrinho, // Salva o array de objetos no formato JSONB
+              subtotal: subtotal,
+              taxa_entrega: taxaEntrega,
+              total: total,
+              forma_pagamento: formaPagamento,
+              observacoes: observacoes,
+              status: 'Pendente' // Status inicial padrão
+            }
+          ])
+          .select(); // Força o retorno do registro criado para obtermos o 'numero_pedido'
+
+        if (error) throw error;
+
+        const pedidoCriado = data[0];
+        const numeroPedido = pedidoCriado.numero_pedido;
+
+        // D. PASSO 2: Monta a mensagem formatada para o WhatsApp
+        let textoWhats = `*NOVO PEDIDO #${numeroPedido}*\n\n`;
+        textoWhats += `*Cliente:* ${clienteNome}\n`;
+        textoWhats += `*Telefone:* ${clienteTelefone}\n`;
+        textoWhats += `*Endereço:* ${enderecoEntrega}\n\n`;
+        textoWhats += `*ITENS DO PEDIDO:*\n`;
+
+        carrinho.forEach(item => {
+          textoWhats += `• ${item.qtd}x ${item.nome} - R$ ${(item.preco * item.qtd).toFixed(2)}\n`;
+        });
+
+        if (observacoes.trim() !== "") {
+          textoWhats += `\n*Obs:* ${observacoes}\n`;
+        }
+
+        textoWhats += `\n*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)}`;
+        textoWhats += `\n*Forma de Pagamento:* ${formaPagamento}`;
+        textoWhats += `\n*TOTAL:* R$ ${total.toFixed(2)}`;
+
+        // E. PASSO 3: Abre o aplicativo do WhatsApp com a mensagem pronta
+        const urlWhatsApp = `https://wa.me/${TELEFONE_RESTAURANTE}?text=${encodeURIComponent(textoWhats)}`;
+        window.open(urlWhatsApp, '_blank');
+
+        alert(`Pedido #${numeroPedido} registrado com sucesso!`);
+
+      } catch (err) {
+        console.error("Erro ao processar pedido:", err);
+        alert("Erro ao gravar pedido no banco de dados. Tente novamente.");
+      } finally {
+        btn.innerText = "Confirmar e Enviar pelo WhatsApp";
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
