@@ -401,18 +401,18 @@
       const numeroPedido = Math.floor(1000 + Math.random() * 9000);
 
       const novoPedido = {
-        numero_pedido: Number(numeroPedido),
-        cliente_nome: clienteNome,
-        cliente_telefone: clienteTel,
-        tipo_entrega: tipoEntregaAtual,
-        endereco_entrega: clienteEndereco,
-        forma_pagamento: formaPagamento,
-        itens: carrinho,
-        taxa_entrega: Number(taxaAplicada),
-        total: Number(totalGeral),
-        status: 'Pendente'
-      };
-
+    numero_pedido: Number(numeroPedido),
+    cliente_nome: clienteNome,
+    cliente_telefone: clienteTel,
+    tipo_entrega: tipoEntregaAtual,
+    endereco_entrega: clienteEndereco,
+    forma_pagamento: formaPagamento,
+    itens: carrinho,
+    subtotal: Number(subtotal), // <--- CAMPO ADICIONADO AQUI
+    taxa_entrega: Number(taxaAplicada),
+    total: Number(totalGeral),
+    status: 'Pendente'
+  };
       const { error } = await _supabase.from('pedidos').insert([novoPedido]);
 
       if (error) {
