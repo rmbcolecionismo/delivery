@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Restaurante - Pedidos em Tempo Real</title>
+  <!-- Tailwind CSS para estilização rápida -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 font-sans">
+
+  <!-- Cabeçalho -->
+  <header class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow">
+    <h1 class="text-2xl font-bold text-gray-800">🍔 Painel de Pedidos</h1>
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+      <span class="text-sm font-semibold text-gray-600">Tempo Real Ativo</span>
+    </div>
+  </header>
+
+  <!-- Colunas do Kanban -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    
+    <!-- Coluna: Pendente -->
+    <div class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+      <h2 class="font-bold text-amber-800 text-lg mb-3 flex items-center justify-between">
+        🟡 Pendente <span id="count-Pendente" class="bg-amber-200 text-amber-800 text-xs px-2 py-1 rounded-full">0</span>
+      </h2>
+      <div id="coluna-Pendente" class="space-y-3"></div>
+    </div>
+
+    <!-- Coluna: Em Preparo -->
+    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+      <h2 class="font-bold text-blue-800 text-lg mb-3 flex items-center justify-between">
+        🔵 Em Preparo <span id="count-Em Preparo" class="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full">0</span>
+      </h2>
+      <div id="coluna-Em Preparo" class="space-y-3"></div>
+    </div>
+
+    <!-- Coluna: Saiu para Entrega -->
+    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+      <h2 class="font-bold text-purple-800 text-lg mb-3 flex items-center justify-between">
+        🟣 Saiu p/ Entrega <span id="count-Saiu para Entrega" class="bg-purple-200 text-purple-800 text-xs px-2 py-1 rounded-full">0</span>
+      </h2>
+      <div id="coluna-Saiu para Entrega" class="space-y-3"></div>
+    </div>
+
+    <!-- Coluna: Entregue -->
+    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+      <h2 class="font-bold text-green-800 text-lg mb-3 flex items-center justify-between">
+        🟢 Entregue <span id="count-Entregue" class="bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">0</span>
+      </h2>
+      <div id="coluna-Entregue" class="space-y-3"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // 1. CONFIGURAÇÕES DO SUPABASE
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "https://eyddrnjrewehojfmskvd.supabase.co"; // Substitua com a sua URL
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; // Substitua com a sua chave anon
+
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let listaPedidos = [];
+
+    // -------------------------------------------------------------
+    // 2. INICIALIZAÇÃO E REALTIME
+    // -------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', async () => {
+      await carregarPedidosIniciais();
+      ativarEscutaRealtime();
+    });
+
+    // Busca os pedidos que já existem no banco
+    async function carregarPedidosIniciais() {
+      const { data, error } = await _supabase
+        .from('pedidos')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Erro ao carregar pedidos:", error);
+        return;
+      }
+
+      listaPedidos = data;
+      renderizarPainel();
+    }
+
+    // Ouve novos pedidos e alterações de status em TEMPO REAL
+    function ativarEscutaRealtime() {
+      _supabase
+        .channel('mudancas-pedidos')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'pedidos' },
+          (payload) => {
+            console.log('Evento Realtime Recebido:', payload);
+
+            if (payload.eventType === 'INSERT') {
+              // Toca alerta sonoro ao receber novo pedido
+              tocarSomAlerta();
+              listaPedidos.unshift(payload.new);
+            } else if (payload.eventType === 'UPDATE') {
+              // Atualiza o pedido existente na lista
+              const index = listaPedidos.findIndex(p => p.id === payload.new.id);
+              if (index !== -1) listaPedidos[index] = payload.new;
+            } else if (payload.eventType === 'DELETE') {
+              listaPedidos = listaPedidos.filter(p => p.id !== payload.old.id);
+            }
+
+            renderizarPainel();
+          }
+        )
+        .subscribe();
+    }
+
+    // -------------------------------------------------------------
+    // 3. ALTERAR STATUS DO PEDIDO NO BANCO
+    // -------------------------------------------------------------
+    async function mudarStatus(idPedido, novoStatus) {
+      const { error } = await _supabase
+        .from('pedidos')
+        .update({ status: novoStatus })
+        .eq('id', idPedido);
+
+      if (error) {
+        alert("Erro ao alterar status!");
+        console.error(error);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 4. RENDERIZAÇÃO DOS CARDS NA TELA
+    // -------------------------------------------------------------
+    function renderizarPainel() {
+      const statusPossiveis = ['Pendente', 'Em Preparo', 'Saiu para Entrega', 'Entregue'];
+
+      // Limpa todas as colunas
+      statusPossiveis.forEach(s => {
+        const col = document.getElementById(`coluna-${s}`);
+        if (col) col.innerHTML = '';
+      });
+
+      // Contadores
+      const contadores = { 'Pendente': 0, 'Em Preparo': 0, 'Saiu para Entrega': 0, 'Entregue': 0 };
+
+      listaPedidos.forEach(pedido => {
+        const statusAtual = pedido.status || 'Pendente';
+        if (contadores[statusAtual] !== undefined) contadores[statusAtual]++;
+
+        const colunaTarget = document.getElementById(`coluna-${statusAtual}`);
+        if (!colunaTarget) return;
+
+        // Monta o HTML do card do pedido
+        const cardHTML = document.createElement('div');
+        cardHTML.className = "bg-white p-4 rounded-lg shadow border border-gray-200 text-sm";
+        
+        let itensHTML = '';
+        if (Array.isArray(pedido.itens)) {
+          itensHTML = pedido.itens.map(i => `<li><b>${i.qtd}x</b> ${i.nome}</li>`).join('');
+        }
+
+        cardHTML.innerHTML = `
+          <div class="flex justify-between items-center font-bold text-gray-800 border-b pb-2 mb-2">
+            <span>Pedido #${pedido.numero_pedido || 'N/A'}</span>
+            <span class="text-xs text-gray-500">${new Date(pedido.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+          </div>
+          <p class="font-semibold text-gray-700">${pedido.cliente_nome}</p>
+          <p class="text-gray-500 text-xs mb-2">📞 ${pedido.cliente_telefone}</p>
+          <p class="text-gray-600 text-xs bg-gray-50 p-2 rounded mb-2">📍 ${pedido.endereco_entrega}</p>
+          
+          <ul class="text-xs text-gray-700 space-y-1 mb-3 list-disc list-inside">
+            ${itensHTML}
+          </ul>
+
+          ${pedido.observacoes ? `<p class="text-xs text-amber-700 bg-amber-50 p-2 rounded mb-3"><b>Obs:</b> ${pedido.observacoes}</p>` : ''}
+
+          <div class="border-t pt-2 mt-2 flex justify-between items-center text-xs font-bold text-gray-800">
+            <span>Total: R$ ${Number(pedido.total).toFixed(2)}</span>
+            <span class="text-gray-500">${pedido.forma_pagamento}</span>
+          </div>
+
+          <!-- Botões de Ação para avançar de status -->
+          <div class="mt-3 pt-2 border-t flex flex-wrap gap-1">
+            ${statusAtual === 'Pendente' ? `
+              <button onclick="mudarStatus('${pedido.id}', 'Em Preparo')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 rounded transition text-xs">
+                ➡️ Iniciar Preparo
+              </button>
+            ` : ''}
+
+            ${statusAtual === 'Em Preparo' ? `
+              <button onclick="mudarStatus('${pedido.id}', 'Saiu para Entrega')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-1.5 rounded transition text-xs">
+                ➡️ Sair p/ Entrega
+              </button>
+            ` : ''}
+
+            ${statusAtual === 'Saiu para Entrega' ? `
+              <button onclick="mudarStatus('${pedido.id}', 'Entregue')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 rounded transition text-xs">
+                ✅ Marcar como Entregue
+              </button>
+            ` : ''}
+          </div>
+        `;
+
+        colunaTarget.appendChild(cardHTML);
+      });
+
+      // Atualiza contadores na interface
+      statusPossiveis.forEach(s => {
+        const badge = document.getElementById(`count-${s}`);
+        if (badge) badge.innerText = contadores[s];
+      });
+    }
+
+    // Sinal sonoro para quando um pedido chega
+    function tocarSomAlerta() {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota D5
+      osc.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    }
+  </script>
+</body>
+</html>
