@@ -1,307 +1,435 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verificador de Raio de Entrega - Loja Leiria</title>
-  <!-- Tailwind CSS para design moderno e responsivo -->
+  <title>Burger Studio - Cardápio Digital</title>
+  
+  <!-- Supabase JS CDN -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome para ícones -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col justify-between">
 
-  <!-- Navegação superior -->
-  <header class="bg-indigo-700 text-white shadow-md">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <i class="fa-solid fa-truck-fast text-2xl text-yellow-400"></i>
-        <h1 class="text-xl font-bold">Minha Loja - Leiria</h1>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            burger: {
+              orange: '#f97316',
+              red: '#dc2626',
+              dark: '#090d16',
+              panel: '#111827'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen pb-28 selection:bg-orange-500 selection:text-white">
+
+  <!-- CABEÇALHO DA LOJA -->
+  <header class="bg-burger-panel border-b border-gray-800 sticky top-0 z-40 shadow-xl">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">🍔</span>
+        <div>
+          <h1 class="text-xl font-black text-white tracking-wider">BURGER <span class="text-orange-500">STUDIO</span></h1>
+          <div class="flex items-center gap-2">
+            <span id="badge-status-loja" class="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Aberto
+            </span>
+          </div>
+        </div>
       </div>
-      <button id="btnToggleAdmin" onclick="toggleAdminModal()" class="bg-indigo-800 hover:bg-indigo-900 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition">
-        <i class="fa-solid fa-user-gear"></i> Painel Admin
+
+      <!-- BOTÃO CARRINHO RÁPIDO NO HEADER -->
+      <button onclick="abrirModalCarrinho()" class="bg-orange-500/10 hover:bg-orange-500 hover:text-white text-orange-400 border border-orange-500/30 px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2">
+        <span>🛒</span>
+        <span id="btn-header-qtd" class="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-black">0</span>
       </button>
     </div>
   </header>
 
-  <!-- Conteúdo Principal / Cliente -->
-  <main class="max-w-2xl mx-auto px-4 py-12 w-full flex-grow">
-    <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
-      
-      <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full mb-4">
-          <i class="fa-solid fa-location-dot text-3xl"></i>
-        </div>
-        <h2 class="text-2xl font-bold text-slate-900">Verifique se entregamos na sua zona</h2>
-        <p class="text-slate-500 mt-2 text-sm">
-          A nossa loja física situa-se no código postal <strong>2400-180 (Leiria)</strong> e realizamos entregas num raio de <strong><span id="displayRadius">5</span> km</strong>.
-        </p>
-      </div>
+  <main class="max-w-5xl mx-auto px-4 mt-6">
 
-      <!-- Formulário de Consulta de Código Postal -->
-      <form id="checkForm" onsubmit="validarCodigoPostal(event)" class="space-y-4">
-        <div>
-          <label for="postalCode" class="block text-sm font-medium text-slate-700 mb-1">Código Postal (Portugal)</label>
-          <div class="relative">
-            <input 
-              type="text" 
-              id="postalCode" 
-              placeholder="Ex: 2400-180 ou 2410-001" 
-              maxlength="8" 
-              required
-              class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-lg tracking-wide placeholder:text-slate-400"
-            />
-            <button type="submit" class="absolute right-2 top-2 bottom-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 rounded-lg transition flex items-center gap-2">
-              <i class="fa-solid fa-magnifying-glass"></i> Verificar
-            </button>
-          </div>
-          <p class="text-xs text-slate-400 mt-1">Formato suportado: 0000-000 ou 0000</p>
-        </div>
-      </form>
-
-      <!-- Caixas de Resultado -->
-      <div id="resultSuccess" class="hidden mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
-        <i class="fa-solid fa-circle-check text-emerald-600 text-xl mt-0.5"></i>
-        <div>
-          <h3 class="font-bold text-emerald-900">Entregamos na sua morada!</h3>
-          <p id="successMessage" class="text-sm text-emerald-700 mt-1">O seu código postal está dentro do nosso raio de atendimento de 5 km.</p>
-        </div>
-      </div>
-
-      <div id="resultError" class="hidden mt-6 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3">
-        <i class="fa-solid fa-circle-xmark text-rose-600 text-xl mt-0.5"></i>
-        <div>
-          <h3 class="font-bold text-rose-900">Fora da zona de entrega</h3>
-          <p id="errorMessage" class="text-sm text-rose-700 mt-1">Lamentamos, mas o código postal introduzido fica fora do nosso raio de entrega direta (5 km).</p>
-        </div>
-      </div>
-
+    <!-- FILTRO DE CATEGORIAS -->
+    <div id="container-categorias" class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-6">
+      <button onclick="filtrarCategoria('todas')" class="btn-cat bg-orange-500 text-white px-4 py-2.5 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-lg shadow-orange-500/20">
+        🔥 Todas
+      </button>
+      <!-- Categorias dinâmicas serão injetadas aqui -->
     </div>
+
+    <!-- LISTA DE PRODUTOS -->
+    <div id="grid-produtos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <p class="col-span-full text-center text-gray-500 py-12">Carregando cardápio...</p>
+    </div>
+
   </main>
 
-  <!-- MODAL ADMIN: Gestão do Range e Parâmetros -->
-  <div id="adminModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+  <!-- BARRA FIXA INFERIOR DO CARRINHO -->
+  <div id="barra-carrinho" class="fixed bottom-0 left-0 right-0 bg-burger-panel/95 backdrop-blur-md border-t border-gray-800 p-4 z-30 transition-transform duration-300 translate-y-full shadow-2xl">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
+      <div>
+        <span class="text-xs text-gray-400 font-medium block">Total do Pedido:</span>
+        <span id="carrinho-total" class="text-2xl font-black text-orange-500">€ 0,00</span>
+      </div>
+      <button onclick="abrirModalCarrinho()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-2xl font-black text-sm transition shadow-lg shadow-orange-500/20 flex items-center gap-2">
+        <span>Ver Carrinho</span>
+        <span id="carrinho-qtd" class="bg-white/20 text-white px-2 py-0.5 rounded-lg text-xs">0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL DO CARRINHO / CHECKOUT -->
+  <div id="modal-carrinho" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-end opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-burger-panel w-full max-w-md h-full flex flex-col justify-between p-6 overflow-y-auto border-l border-gray-800">
       
-      <div class="flex justify-between items-center border-b pb-4 mb-4">
-        <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-indigo-600"></i> Painel de Administração - Zona de Entrega
-        </h3>
-        <button onclick="toggleAdminModal()" class="text-slate-400 hover:text-slate-600 p-1">
-          <i class="fa-solid fa-xmark text-xl"></i>
-        </button>
-      </div>
+      <div>
+        <!-- CABEÇALHO DO MODAL -->
+        <div class="flex justify-between items-center pb-4 border-b border-gray-800 mb-4">
+          <h2 class="text-lg font-black text-white flex items-center gap-2">
+            <span>🛒</span> Meu Carrinho
+          </h2>
+          <button onclick="fecharModalCarrinho()" class="text-gray-400 hover:text-white p-2 text-xl">✕</button>
+        </div>
 
-      <div class="space-y-6">
-        
-        <!-- Configuração Básica -->
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <h4 class="font-semibold text-sm text-slate-800 mb-3">Dados da Loja Física</h4>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-medium text-slate-600">Código Postal Base</label>
-              <input type="text" id="adminBaseCode" value="2400-180" disabled class="w-full bg-slate-200 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-600 cursor-not-allowed">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600">Raio Definido (Km)</label>
-              <input type="number" id="adminRadiusInput" value="5" min="1" max="50" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        <!-- LISTA DOS ITENS NO CARRINHO -->
+        <div id="lista-carrinho" class="space-y-3 mb-6">
+          <p class="text-center text-gray-500 py-8 text-xs font-semibold">O carrinho está vazio.</p>
+        </div>
+
+        <!-- FORMULÁRIO DO CLIENTE -->
+        <form id="form-checkout" onsubmit="finalizarPedido(event)" class="border-t border-gray-800 pt-4 space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">Seu Nome *</label>
+            <input type="text" id="cli-nome" placeholder="Ex: João Silva" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">Telefone / WhatsApp *</label>
+            <input type="tel" id="cli-tel" placeholder="Ex: +351 912 345 678" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
+          </div>
+
+          <!-- SELEÇÃO: ENTREGAR OU LEVANTAR -->
+          <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">Tipo de Pedido *</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" id="btn-tipo-entrega" onclick="selecionarTipoEntrega('Entrega')" class="py-2.5 px-3 rounded-xl text-xs font-bold border border-orange-500 bg-orange-500/10 text-orange-400 flex items-center justify-center gap-1.5 transition">
+                🛵 Entrega
+              </button>
+              <button type="button" id="btn-tipo-retirada" onclick="selecionarTipoEntrega('Retirada')" class="py-2.5 px-3 rounded-xl text-xs font-bold border border-gray-800 bg-gray-950 text-gray-400 flex items-center justify-center gap-1.5 transition">
+                🏪 Levantar na Loja
+              </button>
             </div>
           </div>
-        </div>
 
-        <!-- Adicionar Novo Range/Faixa -->
-        <div>
-          <h4 class="font-semibold text-sm text-slate-800 mb-2">Adicionar Faixa de Código Postal Atendida</h4>
-          <form onsubmit="adicionarRange(event)" class="grid grid-cols-5 gap-2">
-            <input type="number" id="rangeStart" placeholder="Início (Ex: 2400)" required min="1000" max="9999" class="col-span-2 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-            <input type="number" id="rangeEnd" placeholder="Fim (Ex: 2415)" required min="1000" max="9999" class="col-span-2 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-            <button type="submit" class="col-span-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg text-sm py-2 transition">
-              <i class="fa-solid fa-plus"></i> Add
-            </button>
-          </form>
-          <span class="text-xs text-slate-400 mt-1 block">Apenas os primeiros 4 dígitos do código postal (ex: de 2400 a 2415 para ~5km de Leiria).</span>
-        </div>
-
-        <!-- Lista de Ranges Ativos -->
-        <div>
-          <h4 class="font-semibold text-sm text-slate-800 mb-2">Faixas de Códigos Postais Permitidas</h4>
-          <div id="rangesList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-            <!-- Inserido dinamicamente via JS -->
+          <!-- CAMPO ENDEREÇO (EXIBIDO SE FOR ENTREGA) -->
+          <div id="box-endereco">
+            <label class="block text-xs font-bold text-gray-400 mb-1">Endereço de Entrega *</label>
+            <input type="text" id="cli-endereco" placeholder="Rua, Número, Andar / Código Postal" class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
           </div>
-        </div>
 
-      </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">Forma de Pagamento *</label>
+            <select id="cli-pagamento" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
+              <option value="Dinheiro">💶 Dinheiro</option>
+              <option value="Cartão de Crédito/Débito">💳 Cartão de Crédito / Débito</option>
+              <option value="MB Way / Transferência">📱 MB Way / App</option>
+            </select>
+          </div>
 
-      <!-- Rodapé Modal Admin -->
-      <div class="mt-6 pt-4 border-t flex justify-between items-center">
-        <button onclick="restaurarPadroes()" class="text-xs text-rose-600 hover:underline">Restaurar Padrão (Leiria 5Km)</button>
-        <button onclick="salvarConfiguracoesAdmin()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded-lg text-sm transition flex items-center gap-2">
-          <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
-        </button>
+          <!-- RESUMO DE VALORES -->
+          <div class="space-y-1.5 py-3 border-t border-b border-gray-800/80 my-3">
+            <div class="flex justify-between items-center text-xs text-gray-400">
+              <span>Subtotal dos produtos:</span>
+              <span id="modal-subtotal" class="font-bold text-gray-200">€ 0,00</span>
+            </div>
+            <div id="row-taxa-entrega" class="flex justify-between items-center text-xs text-orange-400">
+              <span>Taxa de Entrega:</span>
+              <span id="modal-taxa" class="font-bold">€ 2,00</span>
+            </div>
+            <div class="flex justify-between items-center pt-1 border-t border-gray-800/40">
+              <span class="text-sm font-bold text-gray-300">Total a Pagar:</span>
+              <span id="modal-carrinho-total" class="text-2xl font-black text-orange-500">€ 0,00</span>
+            </div>
+          </div>
+
+          <button type="submit" id="btn-finalizar" class="w-full bg-green-600 hover:bg-green-500 text-white font-extrabold py-3.5 rounded-xl transition text-sm shadow-lg shadow-green-600/20">
+            ✅ Confirmar e Enviar Pedido
+          </button>
+        </form>
       </div>
 
     </div>
   </div>
 
-  <!-- Rodapé do Site -->
-  <footer class="bg-slate-800 text-slate-400 text-center py-4 text-xs">
-    <p>Loja em Leiria (CP: 2400-180) &copy; 2026 - Gestão de Raio de Atendimento</p>
-  </footer>
-
-  <!-- LÓGICA JAVASCRIPT -->
   <script>
-    // Configuração inicial padrão (Raio de 5Km em torno de 2400-180 Leiria abrange de 2400 a 2415)
-    const DEFAULT_CONFIG = {
-      basePostalCode: "2400-180",
-      radiusKm: 5,
-      ranges: [
-        { start: 2400, end: 2415 } // Cobre Leiria, Marrazes, Parceiros, Barosa, Pousos, etc.
-      ]
-    };
+    // -------------------------------------------------------------
+    // CONFIGURAÇÃO SUPABASE
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "https://shiexpkmmiwsaspdqbok.supabase.co"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Obter dados do localStorage ou carregar padrões
-    function getConfig() {
-      const saved = localStorage.getItem('deliveryConfig');
-      return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
-    }
+    let carrinho = [];
+    let produtosCache = [];
+    let tipoEntregaAtual = 'Entrega'; 
+    let taxaEntregaValor = 2.00;
 
-    // Salvar no localStorage
-    function setConfig(config) {
-      localStorage.setItem('deliveryConfig', JSON.stringify(config));
-    }
-
-    // Renderizar dados no arranque
-    document.addEventListener('DOMContentLoaded', () => {
-      renderAdminData();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await checarStatusLoja();
+      await carregarTaxaEntrega();
+      await carregarCategorias();
+      await carregarProdutos();
+      selecionarTipoEntrega('Entrega');
     });
 
-    // Alternar visibilidade do Modal Admin
-    function toggleAdminModal() {
-      const modal = document.getElementById('adminModal');
-      modal.classList.toggle('hidden');
-      modal.classList.toggle('flex');
+    // -------------------------------------------------------------
+    // CARREGAR CONFIGURAÇÕES
+    // -------------------------------------------------------------
+    async function checarStatusLoja() {
+      const { data } = await _supabase.from('configuracoes').select('loja_aberta').eq('id', 1).maybeSingle();
+      const badge = document.getElementById('badge-status-loja');
+      if (data && data.loja_aberta === false) {
+        badge.className = "inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Fechado`;
+      }
     }
 
-    // Renderizar painel Admin com faixas ativas
-    function renderAdminData() {
-      const config = getConfig();
-      document.getElementById('displayRadius').textContent = config.radiusKm;
-      document.getElementById('adminRadiusInput').value = config.radiusKm;
-
-      const listContainer = document.getElementById('rangesList');
-      listContainer.innerHTML = '';
-
-      if (config.ranges.length === 0) {
-        listContainer.innerHTML = '<p class="text-xs text-slate-400 italic">Nenhuma faixa cadastrada.</p>';
-        return;
+    async function carregarTaxaEntrega() {
+      const { data } = await _supabase.from('configuracoes').select('taxa_entrega').eq('id', 1).maybeSingle();
+      if (data && data.taxa_entrega !== undefined && data.taxa_entrega !== null) {
+        taxaEntregaValor = Number(data.taxa_entrega);
       }
+    }
 
-      config.ranges.forEach((item, index) => {
-        const row = document.createElement('div');
-        row.className = 'flex justify-between items-center bg-slate-100 px-3 py-2 rounded-lg text-sm';
-        row.innerHTML = `
-          <span class="font-mono font-medium text-slate-700">CP ${item.start}-000 até ${item.end}-999</span>
-          <button onclick="removerRange(${index})" class="text-rose-500 hover:text-rose-700 text-xs font-semibold">
-            <i class="fa-solid fa-trash-can"></i> Remover
-          </button>
-        `;
-        listContainer.appendChild(row);
+    // -------------------------------------------------------------
+    // CARREGAR CATEGORIAS E PRODUTOS
+    // -------------------------------------------------------------
+    async function carregarCategorias() {
+      const { data } = await _supabase.from('categorias').select('*').order('nome');
+      const container = document.getElementById('container-categorias');
+      if (!data) return;
+
+      data.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.onclick = () => filtrarCategoria(cat.nome);
+        btn.className = "btn-cat bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap border border-gray-800 transition";
+        btn.innerText = cat.nome;
+        container.appendChild(btn);
       });
     }
 
-    // Adicionar um novo range no Admin
-    function adicionarRange(event) {
-      event.preventDefault();
-      const start = parseInt(document.getElementById('rangeStart').value);
-      const end = parseInt(document.getElementById('rangeEnd').value);
+    async function carregarProdutos() {
+      const { data } = await _supabase.from('produtos').select('*').order('nome');
+      produtosCache = data || [];
+      renderizarProdutos(produtosCache);
+    }
 
-      if (isNaN(start) || isNaN(end) || start > end) {
-        alert('Por favor, insira uma faixa válida (Início menor ou igual ao Fim).');
+    function renderizarProdutos(lista) {
+      const grid = document.getElementById('grid-produtos');
+      if (lista.length === 0) {
+        grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">Nenhum produto disponível.</p>`;
         return;
       }
 
-      const config = getConfig();
-      config.ranges.push({ start, end });
-      setConfig(config);
-      
-      document.getElementById('rangeStart').value = '';
-      document.getElementById('rangeEnd').value = '';
-      renderAdminData();
+      grid.innerHTML = lista.map(p => `
+        <div class="bg-burger-panel border border-gray-800/80 rounded-3xl p-4 flex flex-col justify-between shadow-lg hover:border-gray-700 transition">
+          <div>
+            <div class="h-44 w-full bg-gray-950 rounded-2xl overflow-hidden mb-3 relative border border-gray-800/50">
+              <img src="${p.imagem_url || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80'}" class="w-full h-full object-cover">
+              <span class="absolute top-2 right-2 bg-gray-950/80 backdrop-blur-md border border-gray-800 text-orange-400 font-extrabold text-[10px] px-2 py-1 rounded-lg">
+                ${p.categoria || 'Geral'}
+              </span>
+            </div>
+            <h3 class="font-extrabold text-white text-base mb-1">${p.nome}</h3>
+            <p class="text-gray-400 text-xs line-clamp-2 mb-4 font-medium">${p.descricao || 'Sem descrição informada.'}</p>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-gray-800/60">
+            <span class="text-lg font-black text-orange-500">€ ${Number(p.preco).toFixed(2)}</span>
+            <button onclick="adicionarAoCarrinho('${p.id}')" class="bg-orange-500 hover:bg-orange-600 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-orange-500/20">
+              <span>+</span> Adicionar
+            </button>
+          </div>
+        </div>
+      `).join('');
     }
 
-    // Remover um range do Admin
-    function removerRange(index) {
-      const config = getConfig();
-      config.ranges.splice(index, 1);
-      setConfig(config);
-      renderAdminData();
-    }
-
-    // Salvar configurações do Admin
-    function salvarConfiguracoesAdmin() {
-      const config = getConfig();
-      const newRadius = parseInt(document.getElementById('adminRadiusInput').value);
-      
-      if (!isNaN(newRadius) && newRadius > 0) {
-        config.radiusKm = newRadius;
-      }
-      
-      setConfig(config);
-      renderAdminData();
-      toggleAdminModal();
-      alert('Configurações salvas com sucesso!');
-    }
-
-    // Restaurar padrões (5Km / 2400-180)
-    function restaurarPadroes() {
-      if (confirm('Deseja restaurar as configurações originais para 5km em torno de 2400-180?')) {
-        setConfig(DEFAULT_CONFIG);
-        renderAdminData();
-      }
-    }
-
-    // Formatar Input do cliente automaticamente (0000-000)
-    document.getElementById('postalCode').addEventListener('input', function (e) {
-      let value = e.target.value.replace(/\D/g, '');
-      if (value.length > 4) {
-        value = value.slice(0, 4) + '-' + value.slice(4, 7);
-      }
-      e.target.value = value;
-    });
-
-    // Validar código postal submetido pelo cliente
-    function validarCodigoPostal(event) {
-      event.preventDefault();
-      const input = document.getElementById('postalCode').value.trim();
-      const successBox = document.getElementById('resultSuccess');
-      const errorBox = document.getElementById('resultError');
-
-      // Ocultar resultados anteriores
-      successBox.classList.add('hidden');
-      errorBox.classList.add('hidden');
-
-      // Extrai os primeiros 4 dígitos do código postal inserido
-      const prefix = parseInt(input.split('-')[0]);
-
-      if (isNaN(prefix) || input.length < 4) {
-        alert('Por favor, insira um código postal válido.');
-        return;
-      }
-
-      const config = getConfig();
-      
-      // Verifica se o prefixo está em algum dos intervalos configurados no Admin
-      const isAllowed = config.ranges.some(r => prefix >= r.start && prefix <= r.end);
-
-      if (isAllowed) {
-        document.getElementById('successMessage').textContent = 
-          `O código postal ${input} está dentro do nosso raio de entrega (${config.radiusKm} km de Leiria 2400-180).`;
-        successBox.classList.remove('hidden');
+    function filtrarCategoria(nomeCat) {
+      if (nomeCat === 'todas') {
+        renderizarProdutos(produtosCache);
       } else {
-        document.getElementById('errorMessage').textContent = 
-          `O código postal ${input} fica fora do nosso raio de atendimento direto (${config.radiusKm} km de Leiria 2400-180).`;
-        errorBox.classList.remove('hidden');
+        const filtrados = produtosCache.filter(p => p.categoria === nomeCat);
+        renderizarProdutos(filtrados);
       }
+    }
+
+    // -------------------------------------------------------------
+    // LÓGICA DO CARRINHO E SELEÇÃO DE TIPO DE ENTREGA
+    // -------------------------------------------------------------
+    function adicionarAoCarrinho(id) {
+      const prod = produtosCache.find(p => p.id === id);
+      if (!prod) return;
+
+      const idx = carrinho.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        carrinho[idx].qtd += 1;
+      } else {
+        carrinho.push({ id: prod.id, nome: prod.nome, preco: Number(prod.preco), qtd: 1 });
+      }
+
+      atualizarCarrinhoUI();
+    }
+
+    function alterarQtdItem(id, delta) {
+      const idx = carrinho.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        carrinho[idx].qtd += delta;
+        if (carrinho[idx].qtd <= 0) carrinho.splice(idx, 1);
+      }
+      atualizarCarrinhoUI();
+    }
+
+    function selecionarTipoEntrega(tipo) {
+      tipoEntregaAtual = tipo;
+      const btnEntrega = document.getElementById('btn-tipo-entrega');
+      const btnRetirada = document.getElementById('btn-tipo-retirada');
+      const boxEndereco = document.getElementById('box-endereco');
+      const inputEndereco = document.getElementById('cli-endereco');
+      const rowTaxa = document.getElementById('row-taxa-entrega');
+
+      if (tipo === 'Entrega') {
+        btnEntrega.className = "py-2.5 px-3 rounded-xl text-xs font-bold border border-orange-500 bg-orange-500/10 text-orange-400 flex items-center justify-center gap-1.5 transition";
+        btnRetirada.className = "py-2.5 px-3 rounded-xl text-xs font-bold border border-gray-800 bg-gray-950 text-gray-400 flex items-center justify-center gap-1.5 transition";
+        
+        boxEndereco.classList.remove('hidden');
+        inputEndereco.required = true;
+        rowTaxa.classList.remove('hidden');
+      } else {
+        btnRetirada.className = "py-2.5 px-3 rounded-xl text-xs font-bold border border-orange-500 bg-orange-500/10 text-orange-400 flex items-center justify-center gap-1.5 transition";
+        btnEntrega.className = "py-2.5 px-3 rounded-xl text-xs font-bold border border-gray-800 bg-gray-950 text-gray-400 flex items-center justify-center gap-1.5 transition";
+        
+        boxEndereco.classList.add('hidden');
+        inputEndereco.required = false;
+        inputEndereco.value = '';
+        rowTaxa.classList.add('hidden');
+      }
+
+      atualizarCarrinhoUI();
+    }
+
+    function atualizarCarrinhoUI() {
+      const subtotal = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+      const taxaAplicada = (tipoEntregaAtual === 'Entrega') ? taxaEntregaValor : 0;
+      const totalGeral = subtotal + taxaAplicada;
+      const qtdTotal = carrinho.reduce((sum, item) => sum + item.qtd, 0);
+
+      document.getElementById('carrinho-total').innerText = `€ ${totalGeral.toFixed(2)}`;
+      document.getElementById('modal-subtotal').innerText = `€ ${subtotal.toFixed(2)}`;
+      document.getElementById('modal-taxa').innerText = `€ ${taxaEntregaValor.toFixed(2)}`;
+      document.getElementById('modal-carrinho-total').innerText = `€ ${totalGeral.toFixed(2)}`;
+      document.getElementById('carrinho-qtd').innerText = qtdTotal;
+      document.getElementById('btn-header-qtd').innerText = qtdTotal;
+
+      const barra = document.getElementById('barra-carrinho');
+      if (qtdTotal > 0) {
+        barra.classList.remove('translate-y-full');
+      } else {
+        barra.classList.add('translate-y-full');
+        fecharModalCarrinho();
+      }
+
+      renderizarItensModal();
+    }
+
+    function renderizarItensModal() {
+      const container = document.getElementById('lista-carrinho');
+      if (carrinho.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 py-8 text-xs font-semibold">O carrinho está vazio.</p>`;
+        return;
+      }
+
+      container.innerHTML = carrinho.map(item => `
+        <div class="flex items-center justify-between bg-gray-950 p-3 rounded-2xl border border-gray-800">
+          <div>
+            <h4 class="font-bold text-white text-xs">${item.nome}</h4>
+            <span class="text-orange-500 font-extrabold text-xs">€ ${(item.preco * item.qtd).toFixed(2)}</span>
+          </div>
+          <div class="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-xl p-1">
+            <button type="button" onclick="alterarQtdItem('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white font-bold text-sm">-</button>
+            <span class="text-xs font-bold text-white w-4 text-center">${item.qtd}</span>
+            <button type="button" onclick="alterarQtdItem('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white font-bold text-sm">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function abrirModalCarrinho() {
+      const modal = document.getElementById('modal-carrinho');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function fecharModalCarrinho() {
+      const modal = document.getElementById('modal-carrinho');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    // -------------------------------------------------------------
+    // FINALIZAR PEDIDO (ENVIO AO SUPABASE)
+    // -------------------------------------------------------------
+    async function finalizarPedido(e) {
+      e.preventDefault();
+
+      if (carrinho.length === 0) return;
+
+      const btn = document.getElementById('btn-finalizar');
+      btn.disabled = true;
+      btn.innerText = "Processando Pedido...";
+
+      const clienteNome = document.getElementById('cli-nome').value;
+      const clienteTel = document.getElementById('cli-tel').value;
+      const clienteEndereco = tipoEntregaAtual === 'Entrega' ? document.getElementById('cli-endereco').value : 'Levantar na Loja';
+      const formaPagamento = document.getElementById('cli-pagamento').value;
+      
+      const subtotal = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+      const taxaAplicada = tipoEntregaAtual === 'Entrega' ? taxaEntregaValor : 0;
+      const totalGeral = subtotal + taxaAplicada;
+      const numeroPedido = Math.floor(1000 + Math.random() * 9000);
+
+      const novoPedido = {
+        numero_pedido: Number(numeroPedido),
+        cliente_nome: clienteNome,
+        cliente_telefone: clienteTel,
+        tipo_entrega: tipoEntregaAtual,
+        endereco_entrega: clienteEndereco,
+        forma_pagamento: formaPagamento,
+        itens: carrinho,
+        taxa_entrega: Number(taxaAplicada),
+        total: Number(totalGeral),
+        status: 'Pendente'
+      };
+
+      const { error } = await _supabase.from('pedidos').insert([novoPedido]);
+
+      if (error) {
+        alert("Erro ao enviar pedido: " + error.message);
+        console.error(error);
+        btn.disabled = false;
+        btn.innerText = "✅ Confirmar e Enviar Pedido";
+        return;
+      }
+
+      carrinho = [];
+      atualizarCarrinhoUI();
+      fecharModalCarrinho();
+      btn.disabled = false;
+      btn.innerText = "✅ Confirmar e Enviar Pedido";
+
+      alert(`Pedido #${numeroPedido} enviado com sucesso! (${tipoEntregaAtual === 'Entrega' ? '🛵 Entrega' : '🏪 Levantar na Loja'})`);
     }
   </script>
 </body>
