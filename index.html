@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Burger Studio - Cardápio Digital (€)</title>
+  <title>Burger Studio - Cardápio Digital</title>
   
   <!-- Supabase JS CDN -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <script>
     tailwind.config = {
       theme: {
@@ -27,238 +27,231 @@
     }
   </script>
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans min-h-screen pb-24 selection:bg-orange-500 selection:text-white">
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen pb-28 selection:bg-orange-500 selection:text-white">
 
-  <!-- BARRA SUPERIOR E BANNER DE STATUS -->
-  <header class="bg-burger-panel/90 backdrop-blur-md border-b border-gray-800/80 text-white sticky top-0 z-40 shadow-xl">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
-      
-      <!-- Logo da Loja -->
+  <!-- CABEÇALHO DA LOJA -->
+  <header class="bg-burger-panel border-b border-gray-800 sticky top-0 z-40 shadow-xl">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <span class="text-4xl filter drop-shadow-md">🍔</span>
+        <span class="text-3xl">🍔</span>
         <div>
-          <h1 class="text-2xl font-black tracking-wider text-orange-500 uppercase leading-none">Burger Studio</h1>
-          <p class="text-xs text-gray-400 font-medium mt-1">Os melhores hambúrgueres artesanais</p>
+          <h1 class="text-xl font-black text-white tracking-wider">BURGER <span class="text-orange-500">STUDIO</span></h1>
+          <div class="flex items-center gap-2">
+            <span id="badge-status-loja" class="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Aberto
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- STATUS DA LOJA EM TEMPO REAL -->
-      <div id="badge-loja" class="px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 bg-gray-800 text-gray-400 border border-gray-700 shadow-inner">
-        <span class="w-2.5 h-2.5 rounded-full bg-gray-500 animate-pulse"></span>
-        <span>Verificando Loja...</span>
-      </div>
-
+      <!-- BOTÃO CARRINHO RÁPIDO NO HEADER -->
+      <button onclick="abrirModalCarrinho()" class="bg-orange-500/10 hover:bg-orange-500 hover:text-white text-orange-400 border border-orange-500/30 px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2">
+        <span>🛒</span>
+        <span id="btn-header-qtd" class="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-black">0</span>
+      </button>
     </div>
   </header>
 
-  <!-- ALERTA QUANDO A LOJA ESTÁ FECHADA -->
-  <div id="alerta-loja-fechada" class="hidden bg-red-600/20 border-b border-red-500/30 text-red-300 text-center py-3 px-4 text-xs font-bold">
-    🚫 No momento a loja está <b>FECHADA</b> para novos pedidos. Você pode visualizar nosso cardápio!
-  </div>
+  <main class="max-w-5xl mx-auto px-4 mt-6">
 
-  <main class="max-w-6xl mx-auto px-4 mt-8">
+    <!-- FILTRO DE CATEGORIAS -->
+    <div id="container-categorias" class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-6">
+      <button onclick="filtrarCategoria('todas')" class="btn-cat bg-orange-500 text-white px-4 py-2.5 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-lg shadow-orange-500/20">
+        🔥 Todas
+      </button>
+      <!-- Categorias dinâmicas serão injetadas aqui -->
+    </div>
 
-    <!-- MENU DE CATEGORIAS PROFISSIONAL -->
-    <section class="mb-10">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h2 class="text-xs font-black text-orange-500 uppercase tracking-widest flex items-center gap-1.5">
-            <span>✨</span> Explore nosso Menu
-          </h2>
-          <p class="text-xs text-gray-400 font-medium">Selecione uma categoria abaixo</p>
-        </div>
-      </div>
-
-      <!-- CARROSSEL / GRID DE CATEGORIAS -->
-      <div id="container-categorias" class="flex gap-3 overflow-x-auto pb-4 pt-1 scrollbar-none snap-x touch-pan-x">
-        <button onclick="filtrarCategoria('todas')" id="cat-todas" class="btn-cat group snap-start flex items-center gap-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 py-3 rounded-2xl text-xs font-black whitespace-nowrap shadow-lg shadow-orange-500/25 border border-orange-400/30 transition-all duration-300 transform scale-105">
-          <span class="text-base group-hover:scale-110 transition-transform">🔥</span>
-          <span>Todas</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- GRID DE PRODUTOS -->
-    <section>
-      <div class="flex justify-between items-center mb-6">
-        <h2 id="titulo-categoria" class="text-xl font-black text-white uppercase tracking-wide flex items-center gap-2">
-          <span>🍔</span> Cardápio
-        </h2>
-      </div>
-
-      <div id="grid-produtos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <p class="col-span-full text-center text-gray-500 py-12">Carregando cardápio...</p>
-      </div>
-    </section>
+    <!-- LISTA DE PRODUTOS -->
+    <div id="grid-produtos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <p class="col-span-full text-center text-gray-500 py-12">Carregando cardápio...</p>
+    </div>
 
   </main>
 
-  <!-- BARRA FLUTUANTE DO CARRINHO (RODAPÉ) -->
-  <div id="barra-carrinho" class="fixed bottom-0 inset-x-0 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 p-4 z-30 shadow-2xl transition-transform transform translate-y-full">
-    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+  <!-- BARRA FIXA INFERIOR DO CARRINHO -->
+  <div id="barra-carrinho" class="fixed bottom-0 left-0 right-0 bg-burger-panel/95 backdrop-blur-md border-t border-gray-800 p-4 z-30 transition-transform duration-300 translate-y-full shadow-2xl">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
       <div>
-        <p class="text-xs text-gray-400 font-medium">Total do Pedido</p>
-        <p id="carrinho-total" class="text-2xl font-black text-orange-500">€ 0,00</p>
+        <span class="text-xs text-gray-400 font-medium block">Total do Pedido:</span>
+        <span id="carrinho-total" class="text-2xl font-black text-orange-500">€ 0,00</span>
       </div>
-      <button onclick="abrirModalCarrinho()" class="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold px-6 py-3 rounded-xl text-sm transition shadow-lg shadow-orange-500/30 flex items-center gap-2">
-        <span>🛒 Ver Carrinho</span>
-        <span id="carrinho-qtd" class="bg-white/20 px-2 py-0.5 rounded-md text-xs">0</span>
+      <button onclick="abrirModalCarrinho()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-2xl font-black text-sm transition shadow-lg shadow-orange-500/20 flex items-center gap-2">
+        <span>Ver Carrinho</span>
+        <span id="carrinho-qtd" class="bg-white/20 text-white px-2 py-0.5 rounded-lg text-xs">0</span>
       </button>
     </div>
   </div>
 
-  <!-- MODAL DO CARRINHO E FINALIZAÇÃO DE PEDIDO -->
-  <div id="modal-carrinho" class="fixed inset-0 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-gray-900 border border-gray-800 rounded-3xl w-full max-w-lg p-6 max-h-[90vh] flex flex-col shadow-2xl">
+  <!-- MODAL DO CARRINHO / CHECKOUT -->
+  <div id="modal-carrinho" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-end opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-burger-panel w-full max-w-md h-full flex flex-col justify-between p-6 overflow-y-auto border-l border-gray-800">
       
-      <div class="flex justify-between items-center pb-4 border-b border-gray-800">
-        <h3 class="text-lg font-black text-white flex items-center gap-2">🛒 Seu Carrinho</h3>
-        <button onclick="fecharModalCarrinho()" class="text-gray-400 hover:text-white text-xl font-bold px-2">✕</button>
+      <div>
+        <!-- CABEÇALHO DO MODAL -->
+        <div class="flex justify-between items-center pb-4 border-b border-gray-800 mb-4">
+          <h2 class="text-lg font-black text-white flex items-center gap-2">
+            <span>🛒</span> Meu Carrinho
+          </h2>
+          <button onclick="fecharModalCarrinho()" class="text-gray-400 hover:text-white p-2 text-xl">✕</button>
+        </div>
+
+        <!-- LISTA DOS ITENS NO CARRINHO -->
+        <div id="lista-carrinho" class="space-y-3 mb-6">
+          <p class="text-center text-gray-500 py-8 text-xs font-semibold">O carrinho está vazio.</p>
+        </div>
+
+        <!-- FORMULÁRIO DO CLIENTE -->
+        <form id="form-checkout" onsubmit="finalizarPedido(event)" class="border-t border-gray-800 pt-4 space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">Seu Nome *</label>
+            <input type="text" id="cli-nome" placeholder="Ex: João Silva" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">Telefone / WhatsApp *</label>
+            <input type="tel" id="cli-tel" placeholder="Ex: +351 912 345 678" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
+          </div>
+
+          <!-- SELEÇÃO: ENTREGAR OU LEVANTAR -->
+          <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">Tipo de Pedido *</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" id="btn-tipo-entrega" onclick="selecionarTipoEntrega('Entrega')" class="py-2.5 px-3 rounded-xl text-xs font-bold border border-orange-500 bg-orange-500/10 text-orange-400 flex items-center justify-center gap-1.5 transition">
+                🛵 Entrega
+              </button>
+              <button type="button" id="btn-tipo-retirada" onclick="selecionarTipoEntrega('Retirada')" class="py-2.5 px-3 rounded-xl text-xs font-bold border border-gray-800 bg-gray-950 text-gray-400 flex items-center justify-center gap-1.5 transition">
+                🏪 Levantar na Loja
+              </button>
+            </div>
+          </div>
+
+          <!-- CAMPO ENDEREÇO (EXIBIDO SE FOR ENTREGA) -->
+          <div id="box-endereco">
+            <label class="block text-xs font-bold text-gray-400 mb-1">Endereço de Entrega *</label>
+            <input type="text" id="cli-endereco" placeholder="Rua, Número, Andar / Código Postal" class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">Forma de Pagamento *</label>
+            <select id="cli-pagamento" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
+              <option value="Dinheiro">💶 Dinheiro</option>
+              <option value="Cartão de Crédito/Débito">💳 Cartão de Crédito / Débito</option>
+              <option value="MB Way / Transferência">📱 MB Way / App</option>
+            </select>
+          </div>
+
+          <!-- RESUMO DE VALORES -->
+          <div class="space-y-1.5 py-3 border-t border-b border-gray-800/80 my-3">
+            <div class="flex justify-between items-center text-xs text-gray-400">
+              <span>Subtotal dos produtos:</span>
+              <span id="modal-subtotal" class="font-bold text-gray-200">€ 0,00</span>
+            </div>
+            <div id="row-taxa-entrega" class="flex justify-between items-center text-xs text-orange-400">
+              <span>Taxa de Entrega:</span>
+              <span id="modal-taxa" class="font-bold">€ 2,00</span>
+            </div>
+            <div class="flex justify-between items-center pt-1 border-t border-gray-800/40">
+              <span class="text-sm font-bold text-gray-300">Total a Pagar:</span>
+              <span id="modal-carrinho-total" class="text-2xl font-black text-orange-500">€ 0,00</span>
+            </div>
+          </div>
+
+          <button type="submit" id="btn-finalizar" class="w-full bg-green-600 hover:bg-green-500 text-white font-extrabold py-3.5 rounded-xl transition text-sm shadow-lg shadow-green-600/20">
+            ✅ Confirmar e Enviar Pedido
+          </button>
+        </form>
       </div>
-
-      <!-- LISTA DE ITENS NO CARRINHO -->
-      <div id="lista-carrinho" class="py-4 overflow-y-auto space-y-3 flex-1"></div>
-
-      <!-- FORMULÁRIO DO CLIENTE -->
-      <form id="form-checkout" onsubmit="finalizarPedido(event)" class="border-t border-gray-800 pt-4 space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-gray-400 mb-1">Seu Nome</label>
-          <input type="text" id="cli-nome" placeholder="Ex: João Silva" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-gray-400 mb-1">Telefone / WhatsApp</label>
-          <input type="tel" id="cli-tel" placeholder="Ex: +351 912 345 678" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-gray-400 mb-1">Forma de Pagamento</label>
-          <select id="cli-pagamento" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
-            <option value="Dinheiro">💶 Dinheiro</option>
-            <option value="Cartão de Crédito/Débito">💳 Cartão de Crédito / Débito</option>
-            <option value="MB Way / Transferência">📱 MB Way / App</option>
-          </select>
-        </div>
-
-        <div class="flex justify-between items-center py-2">
-          <span class="text-sm font-bold text-gray-400">Total a Pagar:</span>
-          <span id="modal-carrinho-total" class="text-2xl font-black text-orange-500">€ 0,00</span>
-        </div>
-
-        <button type="submit" id="btn-finalizar" class="w-full bg-green-600 hover:bg-green-500 text-white font-extrabold py-3.5 rounded-xl transition text-sm shadow-lg shadow-green-600/20">
-          ✅ Confirmar e Enviar Pedido
-        </button>
-      </form>
 
     </div>
   </div>
 
-  <!-- SCRIPT LÓGICA PRINCIPAL -->
   <script>
+    // -------------------------------------------------------------
+    // CONFIGURAÇÃO SUPABASE
+    // -------------------------------------------------------------
     const SUPABASE_URL = "https://shiexpkmmiwsaspdqbok.supabase.co"; 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let cacheProdutos = [];
-    let cacheCategorias = [];
     let carrinho = [];
-    let lojaAberta = true;
+    let produtosCache = [];
+    let tipoEntregaAtual = 'Entrega'; 
+    let taxaEntregaValor = 2.00;
 
     document.addEventListener('DOMContentLoaded', async () => {
       await checarStatusLoja();
+      await carregarTaxaEntrega();
       await carregarCategorias();
       await carregarProdutos();
+      selecionarTipoEntrega('Entrega');
     });
 
+    // -------------------------------------------------------------
+    // CARREGAR CONFIGURAÇÕES
+    // -------------------------------------------------------------
     async function checarStatusLoja() {
-      const badge = document.getElementById('badge-loja');
-      const alerta = document.getElementById('alerta-loja-fechada');
-
       const { data } = await _supabase.from('configuracoes').select('loja_aberta').eq('id', 1).maybeSingle();
-
-      lojaAberta = data ? data.loja_aberta : true;
-
-      if (lojaAberta) {
-        badge.className = "px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/30";
-        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span> Loja ABERTA`;
-        alerta.classList.add('hidden');
-      } else {
-        badge.className = "px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 bg-red-500/10 text-red-400 border border-red-500/30";
-        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Loja FECHADA`;
-        alerta.classList.remove('hidden');
+      const badge = document.getElementById('badge-status-loja');
+      if (data && data.loja_aberta === false) {
+        badge.className = "inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Fechado`;
       }
     }
 
-    // MAPA DE ÍCONES AUTOMÁTICOS PARA CATEGORIAS
-    function obterIconeCategoria(nome) {
-      const n = nome.toLowerCase();
-      if (n.includes('burger') || n.includes('hambú')) return '🍔';
-      if (n.includes('bebida') || n.includes('refri') || n.includes('suco')) return '🥤';
-      if (n.includes('porção') || n.includes('batata') || n.includes('frita')) return '🍟';
-      if (n.includes('sobremesa') || n.includes('doce') || n.includes('sorvete')) return '🍦';
-      if (n.includes('combo') || n.includes('promoc')) return '⚡';
-      if (n.includes('molho') || n.includes('extra')) return '🧀';
-      return '🍽️';
+    async function carregarTaxaEntrega() {
+      const { data } = await _supabase.from('configuracoes').select('taxa_entrega').eq('id', 1).maybeSingle();
+      if (data && data.taxa_entrega !== undefined && data.taxa_entrega !== null) {
+        taxaEntregaValor = Number(data.taxa_entrega);
+      }
     }
 
+    // -------------------------------------------------------------
+    // CARREGAR CATEGORIAS E PRODUTOS
+    // -------------------------------------------------------------
     async function carregarCategorias() {
       const { data } = await _supabase.from('categorias').select('*').order('nome');
-      cacheCategorias = data || [];
-      
       const container = document.getElementById('container-categorias');
-      container.innerHTML = `
-        <button onclick="filtrarCategoria('todas')" id="cat-todas" class="btn-cat group snap-start flex items-center gap-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 py-3 rounded-2xl text-xs font-black whitespace-nowrap shadow-lg shadow-orange-500/25 border border-orange-400/30 transition-all duration-300 transform scale-105">
-          <span class="text-base group-hover:scale-110 transition-transform">🔥</span>
-          <span>Todas</span>
-        </button>
-      ` + cacheCategorias.map(c => {
-        const icone = obterIconeCategoria(c.nome);
-        return `
-          <button onclick="filtrarCategoria('${c.id}')" id="cat-${c.id}" class="btn-cat group snap-start flex items-center gap-2.5 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap border border-gray-800 hover:border-gray-700 transition-all duration-200">
-            <span class="text-base group-hover:scale-110 transition-transform">${icone}</span>
-            <span>${c.nome}</span>
-          </button>
-        `;
-      }).join('');
+      if (!data) return;
+
+      data.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.onclick = () => filtrarCategoria(cat.nome);
+        btn.className = "btn-cat bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap border border-gray-800 transition";
+        btn.innerText = cat.nome;
+        container.appendChild(btn);
+      });
     }
 
     async function carregarProdutos() {
-      const { data } = await _supabase.from('produtos').select('*').eq('disponivel', true).order('created_at', { ascending: false });
-      cacheProdutos = data || [];
-      renderizarProdutos(cacheProdutos);
+      const { data } = await _supabase.from('produtos').select('*').order('nome');
+      produtosCache = data || [];
+      renderizarProdutos(produtosCache);
     }
 
     function renderizarProdutos(lista) {
       const grid = document.getElementById('grid-produtos');
-      if (!grid) return;
-
-      if (!lista || lista.length === 0) {
-        grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">Nenhum item disponível nesta categoria.</p>`;
+      if (lista.length === 0) {
+        grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">Nenhum produto disponível.</p>`;
         return;
       }
 
       grid.innerHTML = lista.map(p => `
-        <div class="bg-gray-900 border border-gray-800/80 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-orange-500/40 transition duration-300 group shadow-xl hover:shadow-2xl hover:shadow-orange-500/5">
+        <div class="bg-burger-panel border border-gray-800/80 rounded-3xl p-4 flex flex-col justify-between shadow-lg hover:border-gray-700 transition">
           <div>
-            <div class="h-52 w-full bg-gray-950/80 p-3 flex items-center justify-center border-b border-gray-800/50 relative overflow-hidden">
-              <img 
-                src="${p.imagem_url || 'https://via.placeholder.com/300'}" 
-                class="max-h-full max-w-full object-contain rounded-2xl group-hover:scale-105 transition duration-300 drop-shadow-lg" 
-                alt="${p.nome}"
-                onerror="this.src='https://via.placeholder.com/300'"
-              >
+            <div class="h-44 w-full bg-gray-950 rounded-2xl overflow-hidden mb-3 relative border border-gray-800/50">
+              <img src="${p.imagem_url || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80'}" class="w-full h-full object-cover">
+              <span class="absolute top-2 right-2 bg-gray-950/80 backdrop-blur-md border border-gray-800 text-orange-400 font-extrabold text-[10px] px-2 py-1 rounded-lg">
+                ${p.categoria || 'Geral'}
+              </span>
             </div>
-
-            <div class="p-5">
-              <h3 class="font-extrabold text-lg text-white mb-1.5 leading-snug group-hover:text-orange-400 transition">${p.nome}</h3>
-              <p class="text-xs text-gray-400 line-clamp-2 mb-2 leading-relaxed">${p.descricao || 'Sem descrição.'}</p>
-            </div>
+            <h3 class="font-extrabold text-white text-base mb-1">${p.nome}</h3>
+            <p class="text-gray-400 text-xs line-clamp-2 mb-4 font-medium">${p.descricao || 'Sem descrição informada.'}</p>
           </div>
 
-          <div class="px-5 pb-5 flex items-center justify-between mt-auto">
-            <span class="text-xl font-black text-orange-500">€ ${Number(p.preco || 0).toFixed(2)}</span>
-            <button onclick="adicionarAoCarrinho('${p.id}')" ${!lojaAberta ? 'disabled' : ''} 
-              class="${lojaAberta ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20 active:scale-95' : 'bg-gray-800 text-gray-500 cursor-not-allowed'} px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-1 shadow-lg">
+          <div class="flex items-center justify-between pt-2 border-t border-gray-800/60">
+            <span class="text-lg font-black text-orange-500">€ ${Number(p.preco).toFixed(2)}</span>
+            <button onclick="adicionarAoCarrinho('${p.id}')" class="bg-orange-500 hover:bg-orange-600 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-orange-500/20">
               <span>+</span> Adicionar
             </button>
           </div>
@@ -266,42 +259,25 @@
       `).join('');
     }
 
-    function filtrarCategoria(catId) {
-      document.querySelectorAll('.btn-cat').forEach(b => {
-        b.className = "btn-cat group snap-start flex items-center gap-2.5 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap border border-gray-800 hover:border-gray-700 transition-all duration-200";
-      });
-
-      const btnAtivo = document.getElementById(catId === 'todas' ? 'cat-todas' : `cat-${catId}`);
-      if (btnAtivo) {
-        btnAtivo.className = "btn-cat group snap-start flex items-center gap-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 py-3 rounded-2xl text-xs font-black whitespace-nowrap shadow-lg shadow-orange-500/25 border border-orange-400/30 transition-all duration-300 transform scale-105";
-      }
-
-      if (catId === 'todas') {
-        document.getElementById('titulo-categoria').innerHTML = `<span>🔥</span> Todas as Opções`;
-        renderizarProdutos(cacheProdutos);
+    function filtrarCategoria(nomeCat) {
+      if (nomeCat === 'todas') {
+        renderizarProdutos(produtosCache);
       } else {
-        const cat = cacheCategorias.find(c => c.id === catId);
-        const nomeCat = cat ? cat.nome : 'Cardápio';
-        const icone = obterIconeCategoria(nomeCat);
-        
-        document.getElementById('titulo-categoria').innerHTML = `<span>${icone}</span> ${nomeCat}`;
-        const filtrados = cacheProdutos.filter(p => p.categoria_id === catId);
+        const filtrados = produtosCache.filter(p => p.categoria === nomeCat);
         renderizarProdutos(filtrados);
       }
     }
 
-    function adicionarAoCarrinho(prodId) {
-      if (!lojaAberta) {
-        alert("A loja está fechada no momento!");
-        return;
-      }
-
-      const prod = cacheProdutos.find(p => p.id === prodId);
+    // -------------------------------------------------------------
+    // LÓGICA DO CARRINHO E SELEÇÃO DE TIPO DE ENTREGA
+    // -------------------------------------------------------------
+    function adicionarAoCarrinho(id) {
+      const prod = produtosCache.find(p => p.id === id);
       if (!prod) return;
 
-      const itemExistente = carrinho.find(i => i.id === prodId);
-      if (itemExistente) {
-        itemExistente.qtd += 1;
+      const idx = carrinho.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        carrinho[idx].qtd += 1;
       } else {
         carrinho.push({ id: prod.id, nome: prod.nome, preco: Number(prod.preco), qtd: 1 });
       }
@@ -309,26 +285,55 @@
       atualizarCarrinhoUI();
     }
 
-    function alterarQtd(prodId, delta) {
-      const item = carrinho.find(i => i.id === prodId);
-      if (!item) return;
+    function alterarQtdItem(id, delta) {
+      const idx = carrinho.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        carrinho[idx].qtd += delta;
+        if (carrinho[idx].qtd <= 0) carrinho.splice(idx, 1);
+      }
+      atualizarCarrinhoUI();
+    }
 
-      item.qtd += delta;
-      if (item.qtd <= 0) {
-        carrinho = carrinho.filter(i => i.id !== prodId);
+    function selecionarTipoEntrega(tipo) {
+      tipoEntregaAtual = tipo;
+      const btnEntrega = document.getElementById('btn-tipo-entrega');
+      const btnRetirada = document.getElementById('btn-tipo-retirada');
+      const boxEndereco = document.getElementById('box-endereco');
+      const inputEndereco = document.getElementById('cli-endereco');
+      const rowTaxa = document.getElementById('row-taxa-entrega');
+
+      if (tipo === 'Entrega') {
+        btnEntrega.className = "py-2.5 px-3 rounded-xl text-xs font-bold border border-orange-500 bg-orange-500/10 text-orange-400 flex items-center justify-center gap-1.5 transition";
+        btnRetirada.className = "py-2.5 px-3 rounded-xl text-xs font-bold border border-gray-800 bg-gray-950 text-gray-400 flex items-center justify-center gap-1.5 transition";
+        
+        boxEndereco.classList.remove('hidden');
+        inputEndereco.required = true;
+        rowTaxa.classList.remove('hidden');
+      } else {
+        btnRetirada.className = "py-2.5 px-3 rounded-xl text-xs font-bold border border-orange-500 bg-orange-500/10 text-orange-400 flex items-center justify-center gap-1.5 transition";
+        btnEntrega.className = "py-2.5 px-3 rounded-xl text-xs font-bold border border-gray-800 bg-gray-950 text-gray-400 flex items-center justify-center gap-1.5 transition";
+        
+        boxEndereco.classList.add('hidden');
+        inputEndereco.required = false;
+        inputEndereco.value = '';
+        rowTaxa.classList.add('hidden');
       }
 
       atualizarCarrinhoUI();
-      renderizarListaCarrinhoModal();
     }
 
     function atualizarCarrinhoUI() {
-      const total = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+      const subtotal = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+      const taxaAplicada = (tipoEntregaAtual === 'Entrega') ? taxaEntregaValor : 0;
+      const totalGeral = subtotal + taxaAplicada;
       const qtdTotal = carrinho.reduce((sum, item) => sum + item.qtd, 0);
 
-      document.getElementById('carrinho-total').innerText = `€ ${total.toFixed(2)}`;
-      document.getElementById('modal-carrinho-total').innerText = `€ ${total.toFixed(2)}`;
+      document.getElementById('carrinho-total').innerText = `€ ${totalGeral.toFixed(2)}`;
+      document.getElementById('modal-subtotal').innerText = `€ ${subtotal.toFixed(2)}`;
+      document.getElementById('modal-taxa').innerText = `€ ${taxaEntregaValor.toFixed(2)}`;
+      document.getElementById('modal-carrinho-total').innerText = `€ ${totalGeral.toFixed(2)}`;
       document.getElementById('carrinho-qtd').innerText = qtdTotal;
+      document.getElementById('btn-header-qtd').innerText = qtdTotal;
 
       const barra = document.getElementById('barra-carrinho');
       if (qtdTotal > 0) {
@@ -337,40 +342,45 @@
         barra.classList.add('translate-y-full');
         fecharModalCarrinho();
       }
+
+      renderizarItensModal();
     }
 
-    function abrirModalCarrinho() {
-      renderizarListaCarrinhoModal();
-      document.getElementById('modal-carrinho').classList.remove('hidden');
-    }
-
-    function fecharModalCarrinho() {
-      document.getElementById('modal-carrinho').classList.add('hidden');
-    }
-
-    function renderizarListaCarrinhoModal() {
+    function renderizarItensModal() {
       const container = document.getElementById('lista-carrinho');
-      
       if (carrinho.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500 py-6 text-sm">Seu carrinho está vazio.</p>`;
+        container.innerHTML = `<p class="text-center text-gray-500 py-8 text-xs font-semibold">O carrinho está vazio.</p>`;
         return;
       }
 
-      container.innerHTML = carrinho.map(i => `
-        <div class="flex justify-between items-center bg-gray-950 p-3.5 rounded-2xl border border-gray-800">
+      container.innerHTML = carrinho.map(item => `
+        <div class="flex items-center justify-between bg-gray-950 p-3 rounded-2xl border border-gray-800">
           <div>
-            <p class="font-extrabold text-sm text-white">${i.nome}</p>
-            <p class="text-xs text-orange-500 font-bold">€ ${i.preco.toFixed(2)} un.</p>
+            <h4 class="font-bold text-white text-xs">${item.nome}</h4>
+            <span class="text-orange-500 font-extrabold text-xs">€ ${(item.preco * item.qtd).toFixed(2)}</span>
           </div>
-          <div class="flex items-center gap-3">
-            <button onclick="alterarQtd('${i.id}', -1)" class="w-7 h-7 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-xs font-bold transition">-</button>
-            <span class="text-sm font-extrabold text-white">${i.qtd}</span>
-            <button onclick="alterarQtd('${i.id}', 1)" class="w-7 h-7 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition">+</button>
+          <div class="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-xl p-1">
+            <button type="button" onclick="alterarQtdItem('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white font-bold text-sm">-</button>
+            <span class="text-xs font-bold text-white w-4 text-center">${item.qtd}</span>
+            <button type="button" onclick="alterarQtdItem('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white font-bold text-sm">+</button>
           </div>
         </div>
       `).join('');
     }
 
+    function abrirModalCarrinho() {
+      const modal = document.getElementById('modal-carrinho');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function fecharModalCarrinho() {
+      const modal = document.getElementById('modal-carrinho');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    // -------------------------------------------------------------
+    // FINALIZAR PEDIDO (ENVIO AO SUPABASE)
+    // -------------------------------------------------------------
     async function finalizarPedido(e) {
       e.preventDefault();
 
@@ -382,24 +392,31 @@
 
       const clienteNome = document.getElementById('cli-nome').value;
       const clienteTel = document.getElementById('cli-tel').value;
+      const clienteEndereco = tipoEntregaAtual === 'Entrega' ? document.getElementById('cli-endereco').value : 'Levantar na Loja';
       const formaPagamento = document.getElementById('cli-pagamento').value;
-      const total = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+      
+      const subtotal = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+      const taxaAplicada = tipoEntregaAtual === 'Entrega' ? taxaEntregaValor : 0;
+      const totalGeral = subtotal + taxaAplicada;
       const numeroPedido = Math.floor(1000 + Math.random() * 9000);
 
       const novoPedido = {
-        numero_pedido: numeroPedido,
+        numero_pedido: Number(numeroPedido),
         cliente_nome: clienteNome,
         cliente_telefone: clienteTel,
+        tipo_entrega: tipoEntregaAtual,
+        endereco_entrega: clienteEndereco,
         forma_pagamento: formaPagamento,
         itens: carrinho,
-        total: total,
+        taxa_entrega: Number(taxaAplicada),
+        total: Number(totalGeral),
         status: 'Pendente'
       };
 
       const { error } = await _supabase.from('pedidos').insert([novoPedido]);
 
       if (error) {
-        alert("Erro ao gravar pedido. Tente novamente.");
+        alert("Erro ao enviar pedido: " + error.message);
         console.error(error);
         btn.disabled = false;
         btn.innerText = "✅ Confirmar e Enviar Pedido";
@@ -412,7 +429,7 @@
       btn.disabled = false;
       btn.innerText = "✅ Confirmar e Enviar Pedido";
 
-      alert(`Pedido #${numeroPedido} enviado com sucesso!`);
+      alert(`Pedido #${numeroPedido} enviado com sucesso! (${tipoEntregaAtual === 'Entrega' ? '🛵 Entrega' : '🏪 Levantar na Loja'})`);
     }
   </script>
 </body>
