@@ -57,7 +57,7 @@
     <!-- FILTRO DE CATEGORIAS PROFISSIONAL -->
     <div class="sticky top-[73px] z-30 bg-gray-950/80 backdrop-blur-md py-3 mb-6 -mx-4 px-4 border-b border-gray-800/50">
       <div id="container-categorias" class="flex items-center gap-2.5 overflow-x-auto scrollbar-none py-1">
-        <button onclick="filtrarCategoria('todas', this)" class="btn-cat active-cat bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95 flex items-center gap-2 border border-orange-400/30">
+        <button onclick="filtrarCategoria('todas', event)" class="btn-cat active-cat bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95 flex items-center gap-2 border border-orange-400/30">
           <span>🔥</span> Todas
         </button>
         <!-- Categorias dinâmicas serão injetadas aqui -->
@@ -172,8 +172,8 @@
     // -------------------------------------------------------------
     // CONFIGURAÇÃO SUPABASE
     // -------------------------------------------------------------
-    const SUPABASE_URL = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
-    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_PUBLIC"; 
+    const SUPABASE_URL = "https://shiexpkmmiwsaspdqbok.supabase.co"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let carrinho = [];
@@ -193,18 +193,26 @@
     // CARREGAR CONFIGURAÇÕES
     // -------------------------------------------------------------
     async function checarStatusLoja() {
-      const { data } = await _supabase.from('configuracoes').select('loja_aberta').eq('id', 1).maybeSingle();
-      const badge = document.getElementById('badge-status-loja');
-      if (data && data.loja_aberta === false) {
-        badge.className = "inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20";
-        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Fechado`;
+      try {
+        const { data } = await _supabase.from('configuracoes').select('loja_aberta').eq('id', 1).maybeSingle();
+        const badge = document.getElementById('badge-status-loja');
+        if (data && data.loja_aberta === false) {
+          badge.className = "inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20";
+          badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Fechado`;
+        }
+      } catch (e) {
+        console.error("Erro status loja:", e);
       }
     }
 
     async function carregarTaxaEntrega() {
-      const { data } = await _supabase.from('configuracoes').select('taxa_entrega').eq('id', 1).maybeSingle();
-      if (data && data.taxa_entrega !== undefined && data.taxa_entrega !== null) {
-        taxaEntregaValor = Number(data.taxa_entrega);
+      try {
+        const { data } = await _supabase.from('configuracoes').select('taxa_entrega').eq('id', 1).maybeSingle();
+        if (data && data.taxa_entrega !== undefined && data.taxa_entrega !== null) {
+          taxaEntregaValor = Number(data.taxa_entrega);
+        }
+      } catch (e) {
+        console.error("Erro taxa entrega:", e);
       }
     }
 
@@ -212,28 +220,38 @@
     // CARREGAR CATEGORIAS E PRODUTOS
     // -------------------------------------------------------------
     async function carregarCategorias() {
-      const { data } = await _supabase.from('categorias').select('*').order('nome');
-      const container = document.getElementById('container-categorias');
-      if (!data) return;
+      try {
+        const { data } = await _supabase.from('categorias').select('*').order('nome');
+        const container = document.getElementById('container-categorias');
+        if (!data) return;
 
-      data.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.onclick = (e) => filtrarCategoria(cat.nome, e.currentTarget);
-        btn.className = "btn-cat bg-gray-900/80 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 font-bold px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 hover:scale-105 active:scale-95";
-        btn.innerText = cat.nome;
-        container.appendChild(btn);
-      });
+        data.forEach(cat => {
+          const btn = document.createElement('button');
+          btn.onclick = (e) => filtrarCategoria(cat.nome, e);
+          btn.className = "btn-cat bg-gray-900/80 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 font-bold px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 hover:scale-105 active:scale-95";
+          btn.innerText = cat.nome;
+          container.appendChild(btn);
+        });
+      } catch (e) {
+        console.error("Erro ao carregar categorias:", e);
+      }
     }
 
     async function carregarProdutos() {
-      const { data } = await _supabase.from('produtos').select('*').order('nome');
-      produtosCache = data || [];
-      renderizarProdutos(produtosCache);
+      try {
+        const { data, error } = await _supabase.from('produtos').select('*').order('nome');
+        if (error) throw error;
+        produtosCache = data || [];
+        renderizarProdutos(produtosCache);
+      } catch (e) {
+        console.error("Erro ao carregar produtos:", e);
+        document.getElementById('grid-produtos').innerHTML = `<p class="col-span-full text-center text-red-500 py-12">Erro ao carregar os produtos. Verifique as credenciais do Supabase.</p>`;
+      }
     }
 
     function renderizarProdutos(lista) {
       const grid = document.getElementById('grid-produtos');
-      if (lista.length === 0) {
+      if (!lista || lista.length === 0) {
         grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">Nenhum produto disponível.</p>`;
         return;
       }
@@ -262,14 +280,14 @@
       `).join('');
     }
 
-    function filtrarCategoria(nomeCat, el) {
-      // Atualizar estado visual do menu de categorias
-      if (el) {
+    function filtrarCategoria(nomeCat, evt) {
+      // Atualizar visual do botão clicado
+      if (evt && evt.currentTarget) {
         document.querySelectorAll('.btn-cat').forEach(btn => {
           btn.className = "btn-cat bg-gray-900/80 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 font-bold px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 hover:scale-105 active:scale-95";
         });
         
-        el.className = "btn-cat active-cat bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95 flex items-center gap-2 border border-orange-400/30";
+        evt.currentTarget.className = "btn-cat active-cat bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95 flex items-center gap-2 border border-orange-400/30";
       }
 
       // Filtrar produtos
