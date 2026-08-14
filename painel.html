@@ -3,81 +3,111 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel do Restaurante - Pedidos em Tempo Real</title>
-  <!-- Tailwind CSS para estilização rápida -->
+  <title>Burger Studio - Painel de Pedidos / Cozinha</title>
+  
+  <!-- Supabase JS CDN -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase JS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="bg-gray-100 min-h-screen p-4 font-sans">
 
-  <!-- Cabeçalho -->
-  <header class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow">
-    <h1 class="text-2xl font-bold text-gray-800">🍔 Painel de Pedidos</h1>
-    <div class="flex items-center gap-2">
-      <span class="inline-block w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-      <span class="text-sm font-semibold text-gray-600">Tempo Real Ativo</span>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            burger: {
+              orange: '#f97316',
+              red: '#dc2626',
+              dark: '#090d16',
+              panel: '#111827'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen pb-12 selection:bg-orange-500 selection:text-white">
+
+  <!-- CABEÇALHO PADRÃO ADMIN/PAINEL -->
+  <header class="bg-burger-panel border-b border-gray-800 text-white sticky top-0 z-40 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+      
+      <!-- Identificação -->
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">👨‍🍳</span>
+        <div>
+          <h1 class="text-xl font-black text-orange-500 uppercase tracking-wider">Painel da Cozinha</h1>
+          <p class="text-xs text-gray-400 font-medium">Gestão de Pedidos em Tempo Real</p>
+        </div>
+      </div>
+
+      <!-- Ações do Topo -->
+      <div class="flex items-center gap-3">
+        <button onclick="carregarPedidos()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-gray-700">
+          <span>🔄</span> Atualizar
+        </button>
+        <a href="admin.html" class="bg-orange-500/10 hover:bg-orange-500 hover:text-white text-orange-400 border border-orange-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+          <span>⚙️</span> Abrir Admin
+        </a>
+      </div>
+
     </div>
   </header>
 
-  <!-- Colunas do Kanban -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-    
-    <!-- Coluna: Pendente -->
-    <div class="bg-amber-50 p-4 rounded-lg border border-amber-200">
-      <h2 class="font-bold text-amber-800 text-lg mb-3 flex items-center justify-between">
-        🟡 Pendente <span id="count-Pendente" class="bg-amber-200 text-amber-800 text-xs px-2 py-1 rounded-full">0</span>
-      </h2>
-      <div id="coluna-Pendente" class="space-y-3"></div>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
+
+    <!-- BARRA DE FILTROS RÁPIDOS -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8 bg-burger-panel p-4 rounded-2xl border border-gray-800 shadow-lg">
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+        <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider mr-2">Filtrar:</span>
+        <button onclick="filtrarStatus('todos')" id="flt-todos" class="btn-flt bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-extrabold transition">
+          Todos (<span id="cnt-todos">0</span>)
+        </button>
+        <button onclick="filtrarStatus('Pendente')" id="flt-Pendente" class="btn-flt bg-gray-900 text-amber-400 hover:bg-gray-800 border border-gray-800 px-4 py-2 rounded-xl text-xs font-bold transition">
+          🟡 Pendentes (<span id="cnt-Pendente">0</span>)
+        </button>
+        <button onclick="filtrarStatus('Em Preparo')" id="flt-Em Preparo" class="btn-flt bg-gray-900 text-blue-400 hover:bg-gray-800 border border-gray-800 px-4 py-2 rounded-xl text-xs font-bold transition">
+          🔵 Em Preparo (<span id="cnt-Em Preparo">0</span>)
+        </button>
+        <button onclick="filtrarStatus('Concluido')" id="flt-Concluido" class="btn-flt bg-gray-900 text-green-400 hover:bg-gray-800 border border-gray-800 px-4 py-2 rounded-xl text-xs font-bold transition">
+          🟢 Concluídos (<span id="cnt-Concluido">0</span>)
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-400 font-medium hidden sm:block">
+        ⏱️ Atualização automática ativa
+      </p>
     </div>
 
-    <!-- Coluna: Em Preparo -->
-    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-      <h2 class="font-bold text-blue-800 text-lg mb-3 flex items-center justify-between">
-        🔵 Em Preparo <span id="count-Em Preparo" class="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full">0</span>
-      </h2>
-      <div id="coluna-Em Preparo" class="space-y-3"></div>
+    <!-- GRID DE CARDS DOS PEDIDOS -->
+    <div id="grid-pedidos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <p class="col-span-full text-center text-gray-500 py-16">Carregando pedidos...</p>
     </div>
 
-    <!-- Coluna: Saiu para Entrega -->
-    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-      <h2 class="font-bold text-purple-800 text-lg mb-3 flex items-center justify-between">
-        🟣 Saiu p/ Entrega <span id="count-Saiu para Entrega" class="bg-purple-200 text-purple-800 text-xs px-2 py-1 rounded-full">0</span>
-      </h2>
-      <div id="coluna-Saiu para Entrega" class="space-y-3"></div>
-    </div>
-
-    <!-- Coluna: Entregue -->
-    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-      <h2 class="font-bold text-green-800 text-lg mb-3 flex items-center justify-between">
-        🟢 Entregue <span id="count-Entregue" class="bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">0</span>
-      </h2>
-      <div id="coluna-Entregue" class="space-y-3"></div>
-    </div>
-
-  </div>
+  </main>
 
   <script>
     // -------------------------------------------------------------
-    // 1. CONFIGURAÇÕES DO SUPABASE
+    // CONFIGURAÇÃO SUPABASE
     // -------------------------------------------------------------
-    const SUPABASE_URL = "https://eyddrnjrewehojfmskvd.supabase.co"; // Substitua com a sua URL
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; // Substitua com a sua chave anon
-
+    const SUPABASE_URL = "https://shiexpkmmiwsaspdqbok.supabase.co"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let listaPedidos = [];
+    let cachePedidos = [];
+    let statusFiltroAtual = 'todos';
 
-    // -------------------------------------------------------------
-    // 2. INICIALIZAÇÃO E REALTIME
-    // -------------------------------------------------------------
-    document.addEventListener('DOMContentLoaded', async () => {
-      await carregarPedidosIniciais();
-      ativarEscutaRealtime();
+    document.addEventListener('DOMContentLoaded', () => {
+      carregarPedidos();
+      // Atualiza os pedidos a cada 10 segundos automaticamente
+      setInterval(carregarPedidos, 10000);
     });
 
-    // Busca os pedidos que já existem no banco
-    async function carregarPedidosIniciais() {
+    // -------------------------------------------------------------
+    // CARREGAR PEDIDOS DO SUPABASE
+    // -------------------------------------------------------------
+    async function carregarPedidos() {
       const { data, error } = await _supabase
         .from('pedidos')
         .select('*')
@@ -88,145 +118,178 @@
         return;
       }
 
-      listaPedidos = data;
-      renderizarPainel();
-    }
-
-    // Ouve novos pedidos e alterações de status em TEMPO REAL
-    function ativarEscutaRealtime() {
-      _supabase
-        .channel('mudancas-pedidos')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'pedidos' },
-          (payload) => {
-            console.log('Evento Realtime Recebido:', payload);
-
-            if (payload.eventType === 'INSERT') {
-              // Toca alerta sonoro ao receber novo pedido
-              tocarSomAlerta();
-              listaPedidos.unshift(payload.new);
-            } else if (payload.eventType === 'UPDATE') {
-              // Atualiza o pedido existente na lista
-              const index = listaPedidos.findIndex(p => p.id === payload.new.id);
-              if (index !== -1) listaPedidos[index] = payload.new;
-            } else if (payload.eventType === 'DELETE') {
-              listaPedidos = listaPedidos.filter(p => p.id !== payload.old.id);
-            }
-
-            renderizarPainel();
-          }
-        )
-        .subscribe();
+      cachePedidos = data || [];
+      atualizarContadores();
+      renderizarPedidos();
     }
 
     // -------------------------------------------------------------
-    // 3. ALTERAR STATUS DO PEDIDO NO BANCO
+    // ATUALIZAR CONTADORES DOS FILTROS
     // -------------------------------------------------------------
-    async function mudarStatus(idPedido, novoStatus) {
-      const { error } = await _supabase
-        .from('pedidos')
-        .update({ status: novoStatus })
-        .eq('id', idPedido);
+    function atualizarContadores() {
+      document.getElementById('cnt-todos').innerText = cachePedidos.length;
+      document.getElementById('cnt-Pendente').innerText = cachePedidos.filter(p => p.status === 'Pendente').length;
+      document.getElementById('cnt-Em Preparo').innerText = cachePedidos.filter(p => p.status === 'Em Preparo').length;
+      document.getElementById('cnt-Concluido').innerText = cachePedidos.filter(p => p.status === 'Concluido' || p.status === 'Concluído').length;
+    }
 
-      if (error) {
-        alert("Erro ao alterar status!");
-        console.error(error);
+    // -------------------------------------------------------------
+    // RENDERIZAR CARDS DOS PEDIDOS
+    // -------------------------------------------------------------
+    function renderizarPedidos() {
+      const grid = document.getElementById('grid-pedidos');
+      if (!grid) return;
+
+      let lista = cachePedidos;
+      if (statusFiltroAtual !== 'todos') {
+        if (statusFiltroAtual === 'Concluido') {
+          lista = cachePedidos.filter(p => p.status === 'Concluido' || p.status === 'Concluído');
+        } else {
+          lista = cachePedidos.filter(p => p.status === statusFiltroAtual);
+        }
+      }
+
+      if (lista.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-16 bg-burger-panel rounded-3xl border border-gray-800">
+            <span class="text-4xl block mb-2">📋</span>
+            <p class="text-gray-400 font-bold text-sm">Nenhum pedido encontrado nesta categoria.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = lista.map(p => {
+        const dataHora = p.created_at ? new Date(p.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+        const itens = Array.isArray(p.itens) ? p.itens : [];
+
+        return `
+          <div class="bg-burger-panel border border-gray-800 rounded-3xl p-5 flex flex-col justify-between shadow-xl relative overflow-hidden transition hover:border-gray-700">
+            
+            <div>
+              <!-- CABEÇALHO DO CARD -->
+              <div class="flex justify-between items-start pb-4 border-b border-gray-800/80 mb-4">
+                <div>
+                  <span class="text-xs font-black text-orange-500 uppercase tracking-widest block">Pedido</span>
+                  <h3 class="text-2xl font-black text-white">#${p.numero_pedido || p.id}</h3>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs text-gray-400 font-bold block mb-1">🕒 ${dataHora}</span>
+                  ${obterBadgeStatus(p.status)}
+                </div>
+              </div>
+
+              <!-- DADOS DO CLIENTE -->
+              <div class="bg-gray-950/60 p-3.5 rounded-2xl border border-gray-800/60 mb-4 space-y-1">
+                <p class="text-sm font-extrabold text-white flex items-center gap-2">
+                  <span>👤</span> ${p.cliente_nome || 'Cliente não identificado'}
+                </p>
+                <p class="text-xs text-gray-400 flex items-center gap-2">
+                  <span>📞</span> ${p.cliente_telefone || 'Sem contato'}
+                </p>
+                <p class="text-xs text-gray-400 flex items-center gap-2">
+                  <span>💳</span> ${p.forma_pagamento || 'A combinar'}
+                </p>
+              </div>
+
+              <!-- LISTA DOS ITENS DO PEDIDO -->
+              <div class="mb-4">
+                <p class="text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-2">Itens Solicitados:</p>
+                <ul class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  ${itens.map(i => `
+                    <li class="flex justify-between items-center text-xs bg-gray-900/80 p-2.5 rounded-xl border border-gray-800/50">
+                      <span class="font-bold text-white"><b class="text-orange-500">${i.qtd}x</b> ${i.nome}</span>
+                      <span class="text-gray-400 font-semibold">€ ${(Number(i.preco) * Number(i.qtd)).toFixed(2)}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            </div>
+
+            <!-- RODAPÉ DO CARD COM TOTAL E AÇÃO -->
+            <div class="border-t border-gray-800/80 pt-4 mt-auto">
+              <div class="flex justify-between items-center mb-4">
+                <span class="text-xs font-extrabold text-gray-400 uppercase">Total:</span>
+                <span class="text-xl font-black text-orange-500">€ ${Number(p.total || 0).toFixed(2)}</span>
+              </div>
+
+              <!-- SELETOR DE MUDANÇA DE STATUS -->
+              <div class="flex items-center gap-2">
+                <select onchange="atualizarStatusPedido('${p.id}', this.value)" class="w-full bg-gray-950 border border-gray-800 text-white text-xs font-bold py-2.5 px-3 rounded-xl outline-none focus:border-orange-500">
+                  <option value="Pendente" ${p.status === 'Pendente' ? 'selected' : ''}>🟡 Pendente</option>
+                  <option value="Em Preparo" ${p.status === 'Em Preparo' ? 'selected' : ''}>🔵 Em Preparo</option>
+                  <option value="Saiu p/ Entrega" ${p.status === 'Saiu p/ Entrega' ? 'selected' : ''}>💜 Saiu p/ Entrega</option>
+                  <option value="Concluido" ${p.status === 'Concluido' || p.status === 'Concluído' ? 'selected' : ''}>🟢 Concluído</option>
+                  <option value="Cancelado" ${p.status === 'Cancelado' ? 'selected' : ''}>🔴 Cancelado</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // -------------------------------------------------------------
+    // BADGES VISUAIS DE STATUS
+    // -------------------------------------------------------------
+    function obterBadgeStatus(status) {
+      switch(status) {
+        case 'Pendente':
+          return `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase">Pendente</span>`;
+        case 'Em Preparo':
+          return `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase">Em Preparo</span>`;
+        case 'Saiu p/ Entrega':
+          return `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase">Entrega</span>`;
+        case 'Concluido':
+        case 'Concluído':
+          return `<span class="bg-green-500/10 text-green-400 border border-green-500/30 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase">Concluído</span>`;
+        case 'Cancelado':
+          return `<span class="bg-red-500/10 text-red-400 border border-red-500/30 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase">Cancelado</span>`;
+        default:
+          return `<span class="bg-gray-800 text-gray-400 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase">${status || 'Pendente'}</span>`;
       }
     }
 
     // -------------------------------------------------------------
-    // 4. RENDERIZAÇÃO DOS CARDS NA TELA
+    // ATUALIZAR STATUS NO SUPABASE
     // -------------------------------------------------------------
-    function renderizarPainel() {
-      const statusPossiveis = ['Pendente', 'Em Preparo', 'Saiu para Entrega', 'Entregue'];
+    async function atualizarStatusPedido(pedidoId, novoStatus) {
+      const { error } = await _supabase
+        .from('pedidos')
+        .update({ status: novoStatus })
+        .eq('id', pedidoId);
 
-      // Limpa todas as colunas
-      statusPossiveis.forEach(s => {
-        const col = document.getElementById(`coluna-${s}`);
-        if (col) col.innerHTML = '';
-      });
+      if (error) {
+        alert("Erro ao atualizar status do pedido.");
+        console.error(error);
+        return;
+      }
 
-      // Contadores
-      const contadores = { 'Pendente': 0, 'Em Preparo': 0, 'Saiu para Entrega': 0, 'Entregue': 0 };
-
-      listaPedidos.forEach(pedido => {
-        const statusAtual = pedido.status || 'Pendente';
-        if (contadores[statusAtual] !== undefined) contadores[statusAtual]++;
-
-        const colunaTarget = document.getElementById(`coluna-${statusAtual}`);
-        if (!colunaTarget) return;
-
-        // Monta o HTML do card do pedido
-        const cardHTML = document.createElement('div');
-        cardHTML.className = "bg-white p-4 rounded-lg shadow border border-gray-200 text-sm";
-        
-        let itensHTML = '';
-        if (Array.isArray(pedido.itens)) {
-          itensHTML = pedido.itens.map(i => `<li><b>${i.qtd}x</b> ${i.nome}</li>`).join('');
-        }
-
-        cardHTML.innerHTML = `
-          <div class="flex justify-between items-center font-bold text-gray-800 border-b pb-2 mb-2">
-            <span>Pedido #${pedido.numero_pedido || 'N/A'}</span>
-            <span class="text-xs text-gray-500">${new Date(pedido.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-          </div>
-          <p class="font-semibold text-gray-700">${pedido.cliente_nome}</p>
-          <p class="text-gray-500 text-xs mb-2">📞 ${pedido.cliente_telefone}</p>
-          <p class="text-gray-600 text-xs bg-gray-50 p-2 rounded mb-2">📍 ${pedido.endereco_entrega}</p>
-          
-          <ul class="text-xs text-gray-700 space-y-1 mb-3 list-disc list-inside">
-            ${itensHTML}
-          </ul>
-
-          ${pedido.observacoes ? `<p class="text-xs text-amber-700 bg-amber-50 p-2 rounded mb-3"><b>Obs:</b> ${pedido.observacoes}</p>` : ''}
-
-          <div class="border-t pt-2 mt-2 flex justify-between items-center text-xs font-bold text-gray-800">
-            <span>Total: R$ ${Number(pedido.total).toFixed(2)}</span>
-            <span class="text-gray-500">${pedido.forma_pagamento}</span>
-          </div>
-
-          <!-- Botões de Ação para avançar de status -->
-          <div class="mt-3 pt-2 border-t flex flex-wrap gap-1">
-            ${statusAtual === 'Pendente' ? `
-              <button onclick="mudarStatus('${pedido.id}', 'Em Preparo')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 rounded transition text-xs">
-                ➡️ Iniciar Preparo
-              </button>
-            ` : ''}
-
-            ${statusAtual === 'Em Preparo' ? `
-              <button onclick="mudarStatus('${pedido.id}', 'Saiu para Entrega')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-1.5 rounded transition text-xs">
-                ➡️ Sair p/ Entrega
-              </button>
-            ` : ''}
-
-            ${statusAtual === 'Saiu para Entrega' ? `
-              <button onclick="mudarStatus('${pedido.id}', 'Entregue')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 rounded transition text-xs">
-                ✅ Marcar como Entregue
-              </button>
-            ` : ''}
-          </div>
-        `;
-
-        colunaTarget.appendChild(cardHTML);
-      });
-
-      // Atualiza contadores na interface
-      statusPossiveis.forEach(s => {
-        const badge = document.getElementById(`count-${s}`);
-        if (badge) badge.innerText = contadores[s];
-      });
+      // Atualiza o cache local e re-renderiza
+      const idx = cachePedidos.findIndex(p => p.id === pedidoId);
+      if (idx !== -1) cachePedidos[idx].status = novoStatus;
+      
+      atualizarContadores();
+      renderizarPedidos();
     }
 
-    // Sinal sonoro para quando um pedido chega
-    function tocarSomAlerta() {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota D5
-      osc.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.3);
+    // -------------------------------------------------------------
+    // FILTRAR CATEGORIAS
+    // -------------------------------------------------------------
+    function filtrarStatus(status) {
+      statusFiltroAtual = status;
+
+      document.querySelectorAll('.btn-flt').forEach(b => {
+        b.className = "btn-flt bg-gray-900 text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 px-4 py-2 rounded-xl text-xs font-bold transition";
+      });
+
+      const btnAtivo = document.getElementById(`flt-${status}`);
+      if (btnAtivo) {
+        btnAtivo.className = "btn-flt bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-extrabold transition shadow-lg shadow-orange-500/20";
+      }
+
+      renderizarPedidos();
     }
   </script>
 </body>
