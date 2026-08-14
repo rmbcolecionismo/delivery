@@ -3,57 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Administrativo - Gestão de Delivery</title>
+  <title>Admin Burger Studio - Painel de Controle</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            burger: {
+              orange: '#f97316',
+              red: '#dc2626',
+              dark: '#111827',
+              panel: '#1f2937'
+            }
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans pb-12">
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen pb-12">
 
-  <!-- NAVEGAÇÃO SUPERIOR -->
-  <nav class="bg-gray-900 text-white p-4 shadow-md mb-6">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold flex items-center gap-2">⚙️ Admin Delivery</h1>
+  <!-- BARRA SUPERIOR DE NAVEGAÇÃO -->
+  <nav class="bg-burger-panel border-b border-gray-800 text-white p-4 sticky top-0 z-40 shadow-xl">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
       
-      <div class="flex items-center space-x-4">
-        <button onclick="mudarAba('dashboard')" class="hover:text-amber-400 font-semibold transition">📊 Dashboard</button>
-        <button onclick="mudarAba('produtos')" class="hover:text-amber-400 font-semibold transition">🍔 Cardápio</button>
-        <button onclick="mudarAba('pedidos')" class="hover:text-amber-400 font-semibold transition">📋 Pedidos</button>
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">🍔</span>
+        <div>
+          <h1 class="text-xl font-extrabold tracking-wider text-orange-500 uppercase">Burger Studio</h1>
+          <p class="text-xs text-gray-400 font-medium">Painel Administrativo</p>
+        </div>
+      </div>
+      
+      <!-- Menu de Abas -->
+      <div class="flex items-center space-x-1 sm:space-x-3 bg-gray-900 p-1.5 rounded-xl border border-gray-800">
+        <button id="btn-tab-dashboard" onclick="mudarAba('dashboard')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition bg-orange-500 text-white shadow-lg shadow-orange-500/30">
+          📊 Dashboard
+        </button>
+        <button id="btn-tab-produtos" onclick="mudarAba('produtos')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition text-gray-400 hover:text-white hover:bg-gray-800">
+          🍟 Cardápio
+        </button>
+        <button id="btn-tab-pedidos" onclick="mudarAba('pedidos')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition text-gray-400 hover:text-white hover:bg-gray-800">
+          🛵 Pedidos
+        </button>
         
         <!-- Botão Logout -->
-        <button onclick="fazerLogout()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition ml-2">
-          🚪 Sair
+        <button onclick="fazerLogout()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-xs font-bold px-3 py-2 rounded-lg transition ml-2 flex items-center gap-1">
+          <span>🚪</span> <span class="hidden sm:inline">Sair</span>
         </button>
       </div>
+
     </div>
   </nav>
 
-  <div class="max-w-7xl mx-auto px-4">
+  <main class="max-w-7xl mx-auto px-4 mt-8">
 
     <!-- ========================================== -->
     <!-- ABA 1: DASHBOARD DE FATURAMENTO -->
     <!-- ========================================== -->
     <section id="aba-dashboard">
-      <h2 class="text-2xl font-bold mb-1">Relatório de Faturamento</h2>
-      <p class="text-sm text-gray-500 mb-6">Valores calculados com base em pedidos marcados como <b>"Entregue"</b>.</p>
+      <div class="mb-6">
+        <h2 class="text-2xl font-black text-white flex items-center gap-2">
+          <span>🔥</span> Desempenho de Vendas
+        </h2>
+        <p class="text-sm text-gray-400">Valores computados estritamente para pedidos finalizados como <b class="text-green-400">"Entregue"</b>.</p>
+      </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Faturamento Diário -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Faturamento Hoje</p>
-          <h3 id="fat-diario" class="text-3xl font-extrabold text-green-600 mt-2">R$ 0,00</h3>
+        
+        <!-- Hoje -->
+        <div class="bg-gradient-to-br from-gray-900 to-gray-900/80 p-6 rounded-2xl border border-orange-500/20 shadow-xl relative overflow-hidden group hover:border-orange-500/50 transition">
+          <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:opacity-20 transition">💰</div>
+          <p class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-1">Faturamento Hoje</p>
+          <h3 id="fat-diario" class="text-4xl font-black text-orange-500">R$ 0,00</h3>
         </div>
 
-        <!-- Faturamento Semanal -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Últimos 7 Dias</p>
-          <h3 id="fat-semanal" class="text-3xl font-extrabold text-blue-600 mt-2">R$ 0,00</h3>
+        <!-- 7 Dias -->
+        <div class="bg-gradient-to-br from-gray-900 to-gray-900/80 p-6 rounded-2xl border border-red-500/20 shadow-xl relative overflow-hidden group hover:border-red-500/50 transition">
+          <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:opacity-20 transition">📈</div>
+          <p class="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Últimos 7 Dias</p>
+          <h3 id="fat-semanal" class="text-4xl font-black text-red-500">R$ 0,00</h3>
         </div>
 
-        <!-- Faturamento Mensal -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Últimos 30 Dias</p>
-          <h3 id="fat-mensal" class="text-3xl font-extrabold text-purple-600 mt-2">R$ 0,00</h3>
+        <!-- 30 Dias -->
+        <div class="bg-gradient-to-br from-gray-900 to-gray-900/80 p-6 rounded-2xl border border-amber-500/20 shadow-xl relative overflow-hidden group hover:border-amber-500/50 transition">
+          <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:opacity-20 transition">🏆</div>
+          <p class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Últimos 30 Dias</p>
+          <h3 id="fat-mensal" class="text-4xl font-black text-amber-400">R$ 0,00</h3>
         </div>
+
       </div>
     </section>
 
@@ -61,50 +104,80 @@
     <!-- ABA 2: CADASTRO E GESTÃO DO CARDÁPIO -->
     <!-- ========================================== -->
     <section id="aba-produtos" class="hidden">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <!-- Formulários de Cadastro -->
+        <!-- Formulários na Esquerda -->
         <div class="space-y-6">
+          
           <!-- Form Categorias -->
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h3 class="text-lg font-bold mb-4">➕ Nova Categoria</h3>
+          <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-lg">
+            <h3 class="text-lg font-extrabold text-orange-400 mb-4 flex items-center gap-2">
+              <span>📂</span> Nova Categoria
+            </h3>
             <form id="form-categoria" onsubmit="salvarCategoria(event)" class="space-y-3">
-              <input type="text" id="cat-nome" placeholder="Nome (Ex: Sobremesas)" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
-              <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 rounded-lg text-sm transition">Salvar Categoria</button>
+              <input type="text" id="cat-nome" placeholder="Ex: Burgers Artesanais, Drinks..." required class="w-full bg-gray-950 border border-gray-700 text-white placeholder-gray-500 p-3 rounded-xl text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+              <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold py-3 rounded-xl text-sm transition shadow-lg shadow-orange-500/20">
+                Salvar Categoria
+              </button>
             </form>
           </div>
 
           <!-- Form Produtos -->
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h3 class="text-lg font-bold mb-4">➕ Novo Produto</h3>
+          <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-lg">
+            <h3 class="text-lg font-extrabold text-orange-400 mb-4 flex items-center gap-2">
+              <span>🍔</span> Novo Item no Cardápio
+            </h3>
             <form id="form-produto" onsubmit="salvarProduto(event)" class="space-y-3">
-              <select id="prod-categoria" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
-                <option value="">Selecione uma Categoria</option>
-              </select>
-              <input type="text" id="prod-nome" placeholder="Nome do Produto" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
-              <textarea id="prod-desc" placeholder="Descrição/Ingredientes" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500 h-20"></textarea>
-              <input type="number" step="0.01" id="prod-preco" placeholder="Preço (Ex: 29.90)" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
-              <input type="url" id="prod-img" placeholder="URL da Imagem (https://...)" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
-              <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg text-sm transition">Cadastrar Produto</button>
+              <div>
+                <label class="block text-xs font-bold text-gray-400 mb-1">Categoria</label>
+                <select id="prod-categoria" required class="w-full bg-gray-950 border border-gray-700 text-white p-3 rounded-xl text-sm outline-none focus:border-orange-500">
+                  <option value="">Carregando categorias...</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-xs font-bold text-gray-400 mb-1">Nome do Lanche/Item</label>
+                <input type="text" id="prod-nome" placeholder="Ex: Smash Double Bacon" required class="w-full bg-gray-950 border border-gray-700 text-white placeholder-gray-500 p-3 rounded-xl text-sm outline-none focus:border-orange-500">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-400 mb-1">Ingredientes / Descrição</label>
+                <textarea id="prod-desc" placeholder="Pão brioche, 2x blend 100g, cheddar fatiado, bacon crocante..." class="w-full bg-gray-950 border border-gray-700 text-white placeholder-gray-500 p-3 rounded-xl text-sm outline-none focus:border-orange-500 h-20"></textarea>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-400 mb-1">Preço (R$)</label>
+                <input type="number" step="0.01" id="prod-preco" placeholder="32.90" required class="w-full bg-gray-950 border border-gray-700 text-white placeholder-gray-500 p-3 rounded-xl text-sm outline-none focus:border-orange-500">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-400 mb-1">URL da Foto</label>
+                <input type="url" id="prod-img" placeholder="https://exemplo.com/hamburguer.jpg" class="w-full bg-gray-950 border border-gray-700 text-white placeholder-gray-500 p-3 rounded-xl text-sm outline-none focus:border-orange-500">
+              </div>
+
+              <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold py-3 rounded-xl text-sm transition shadow-lg shadow-red-600/20">
+                Cadastrar no Cardápio
+              </button>
             </form>
           </div>
+
         </div>
 
-        <!-- Lista de Produtos Cadastrados -->
-        <div class="md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-          <h3 class="text-lg font-bold mb-4">Produtos no Cardápio</h3>
+        <!-- Tabela de Produtos na Direita -->
+        <div class="lg:col-span-2 bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-lg">
+          <h3 class="text-lg font-extrabold text-white mb-4">Cardápio Cadastrado</h3>
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-              <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-bold border-b">
+            <table class="w-full text-left text-sm text-gray-300">
+              <thead class="bg-gray-950 text-gray-400 uppercase text-xs font-bold border-b border-gray-800">
                 <tr>
-                  <th class="p-3">Produto</th>
+                  <th class="p-3">Item</th>
                   <th class="p-3">Categoria</th>
                   <th class="p-3">Preço</th>
                   <th class="p-3">Status</th>
-                  <th class="p-3">Ações</th>
+                  <th class="p-3">Ação</th>
                 </tr>
               </thead>
-              <tbody id="tabela-produtos" class="divide-y"></tbody>
+              <tbody id="tabela-produtos" class="divide-y divide-gray-800"></tbody>
             </table>
           </div>
         </div>
@@ -113,27 +186,27 @@
     </section>
 
     <!-- ========================================== -->
-    <!-- ABA 3: LISTA COMPLETA DE PEDIDOS -->
+    <!-- ABA 3: HISTÓRICO E GESTÃO DE PEDIDOS -->
     <!-- ========================================== -->
     <section id="aba-pedidos" class="hidden">
-      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-lg">
         
-        <!-- Filtros de Status -->
         <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
-          <h2 class="text-xl font-bold">Histórico de Pedidos</h2>
+          <h2 class="text-xl font-extrabold text-white">Gerenciador de Pedidos</h2>
+          
+          <!-- Filtros de Status -->
           <div class="flex gap-2 flex-wrap">
-            <button onclick="filtrarPedidos('Todos')" class="px-3 py-1 bg-gray-800 text-white rounded-full text-xs font-bold">Todos</button>
-            <button onclick="filtrarPedidos('Pendente')" class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">Pendente</button>
-            <button onclick="filtrarPedidos('Em Preparo')" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Em Preparo</button>
-            <button onclick="filtrarPedidos('Saiu para Entrega')" class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold">Saiu p/ Entrega</button>
-            <button onclick="filtrarPedidos('Entregue')" class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Entregue</button>
+            <button onclick="filtrarPedidos('Todos')" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-xs font-bold transition">Todos</button>
+            <button onclick="filtrarPedidos('Pendente')" class="px-3 py-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition">Pendente</button>
+            <button onclick="filtrarPedidos('Em Preparo')" class="px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold transition">Em Preparo</button>
+            <button onclick="filtrarPedidos('Saiu para Entrega')" class="px-3 py-1.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-bold transition">Em Rota</button>
+            <button onclick="filtrarPedidos('Entregue')" class="px-3 py-1.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold transition">Entregue</button>
           </div>
         </div>
 
-        <!-- Tabela -->
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-bold border-b">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-gray-950 text-gray-400 uppercase text-xs font-bold border-b border-gray-800">
               <tr>
                 <th class="p-3">#</th>
                 <th class="p-3">Data/Hora</th>
@@ -144,44 +217,44 @@
                 <th class="p-3">Status</th>
               </tr>
             </thead>
-            <tbody id="tabela-pedidos" class="divide-y"></tbody>
+            <tbody id="tabela-pedidos" class="divide-y divide-gray-800"></tbody>
           </table>
         </div>
 
       </div>
     </section>
 
-  </div>
+  </main>
 
   <!-- ========================================== -->
-  <!-- MODAL DE LOGIN ADMIN (SOBREPOSTO) -->
+  <!-- MODAL DE LOGIN ADMIN (SOBREPOSTO NATIVO) -->
   <!-- ========================================== -->
-  <div id="modal-login" class="fixed inset-0 bg-gray-900 bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
+  <div id="modal-login" class="fixed inset-0 bg-gray-950/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
+    <div class="bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md p-8 border border-orange-500/30">
       
       <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-14 h-14 bg-amber-100 text-amber-600 rounded-full mb-3 text-2xl">
-          🔐
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-orange-500/10 text-orange-500 rounded-full mb-3 text-3xl border border-orange-500/20">
+          🍔
         </div>
-        <h2 class="text-2xl font-extrabold text-gray-900">Acesso Restrito</h2>
-        <p class="text-sm text-gray-500 mt-1">Entre com suas credenciais do Supabase Auth.</p>
+        <h2 class="text-2xl font-black text-white">Burger Studio Admin</h2>
+        <p class="text-xs text-gray-400 mt-1">Insira suas credenciais de acesso restrito.</p>
       </div>
 
-      <div id="login-erro" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg text-center font-medium"></div>
+      <div id="login-erro" class="hidden mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl text-center font-bold"></div>
 
       <form id="form-login" onsubmit="autenticarAdmin(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">E-mail do Administrador</label>
-          <input type="email" id="email-login" required placeholder="admin@restaurante.com" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+          <label class="block text-xs font-bold text-gray-400 uppercase mb-1">E-mail do Administrador</label>
+          <input type="email" id="email-login" required placeholder="admin@burger.com" class="w-full bg-gray-950 border border-gray-800 text-white px-4 py-3 rounded-xl focus:border-orange-500 outline-none text-sm">
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
-          <input type="password" id="senha-login" required placeholder="••••••••" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+          <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Senha</label>
+          <input type="password" id="senha-login" required placeholder="••••••••" class="w-full bg-gray-950 border border-gray-800 text-white px-4 py-3 rounded-xl focus:border-orange-500 outline-none text-sm">
         </div>
 
-        <button type="submit" id="btn-login" class="w-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200">
-          Entrar no Painel
+        <button type="submit" id="btn-login" class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-black py-3 px-4 rounded-xl shadow-lg shadow-orange-500/30 transition duration-200">
+          Acessar Painel
         </button>
       </form>
 
@@ -192,6 +265,7 @@
   <script>
     // -------------------------------------------------------------
     // CONFIGURAÇÃO SUPABASE
+    // 🔴 Lembre-se de colocar suas credenciais válidas abaixo!
     // -------------------------------------------------------------
     const SUPABASE_URL = "https://eyddrnjrewehojfmskvd.supabase.co"; 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
@@ -202,16 +276,21 @@
     let cachePedidos = [];
 
     // -------------------------------------------------------------
-    // INICIALIZAÇÃO E AUTENTICAÇÃO
+    // INICIALIZAÇÃO SEGURA (EVITA TRAVAMENTOS)
     // -------------------------------------------------------------
     document.addEventListener('DOMContentLoaded', async () => {
-      const { data: { session } } = await _supabase.auth.getSession();
+      try {
+        const { data: { session }, error } = await _supabase.auth.getSession();
 
-      if (session) {
-        esconderModalLogin();
-        await inicializarPainel();
-      } else {
-        mostrarModalLogin();
+        if (error || !session) {
+          mostrarModalLogin();
+        } else {
+          esconderModalLogin();
+          await inicializarPainel();
+        }
+      } catch (err) {
+        console.error("Erro de conexão ao inicializar:", err);
+        mostrarModalLogin(); // Em caso de falha de rede/URL, força exibição do modal
       }
     });
 
@@ -224,21 +303,28 @@
       const divErro = document.getElementById('login-erro');
 
       btn.disabled = true;
-      btn.innerText = "Entrando...";
+      btn.innerText = "Autenticando...";
       divErro.classList.add('hidden');
 
-      const { error } = await _supabase.auth.signInWithPassword({ email, password });
+      try {
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
 
-      if (error) {
-        divErro.innerText = "E-mail ou senha inválidos!";
+        if (error) {
+          divErro.innerText = "E-mail ou senha incorretos!";
+          divErro.classList.remove('hidden');
+          btn.disabled = false;
+          btn.innerText = "Acessar Painel";
+          return;
+        }
+
+        esconderModalLogin();
+        await inicializarPainel();
+      } catch (err) {
+        divErro.innerText = "Erro de conexão com o servidor Supabase.";
         divErro.classList.remove('hidden');
         btn.disabled = false;
-        btn.innerText = "Entrar no Painel";
-        return;
+        btn.innerText = "Acessar Painel";
       }
-
-      esconderModalLogin();
-      await inicializarPainel();
     }
 
     async function inicializarPainel() {
@@ -257,88 +343,90 @@
     function esconderModalLogin() { document.getElementById('modal-login').classList.add('hidden'); }
 
     // -------------------------------------------------------------
-    // NAVEGAÇÃO DE ABAS
+    // CONTROLE DE ABAS COM FEEDBACK VISUAL
     // -------------------------------------------------------------
     function mudarAba(aba) {
       document.getElementById('aba-dashboard').classList.add('hidden');
       document.getElementById('aba-produtos').classList.add('hidden');
       document.getElementById('aba-pedidos').classList.add('hidden');
+
+      // Reseta estilo dos botões
+      ['dashboard', 'produtos', 'pedidos'].forEach(tab => {
+        const btn = document.getElementById(`btn-tab-${tab}`);
+        btn.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition text-gray-400 hover:text-white hover:bg-gray-800";
+      });
+
+      // Ativa a aba selecionada
       document.getElementById(`aba-${aba}`).classList.remove('hidden');
+      const btnAtivo = document.getElementById(`btn-tab-${aba}`);
+      btnAtivo.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition bg-orange-500 text-white shadow-lg shadow-orange-500/30";
     }
 
     // -------------------------------------------------------------
-    // GESTÃO DE CATEGORIAS E PRODUTOS
+    // GESTÃO DE CATEGORIAS E PRODUTOS (COM SELEÇÃO AUTOMÁTICA)
     // -------------------------------------------------------------
- // Carrega as categorias e preenche o <select> do produto
-async function carregarCategorias() {
-  const { data, error } = await _supabase
-    .from('categorias')
-    .select('id, nome')
-    .order('nome', { ascending: true });
+    async function carregarCategorias() {
+      const { data, error } = await _supabase.from('categorias').select('id, nome').order('nome');
+      
+      if (error) {
+        console.error("Erro ao carregar categorias:", error);
+        return;
+      }
 
-  if (error) {
-    console.error("Erro ao carregar categorias:", error);
-    return;
-  }
+      cacheCategorias = data || [];
+      const select = document.getElementById('prod-categoria');
 
-  cacheCategorias = data || [];
-  
-  const select = document.getElementById('prod-categoria');
-  
-  if (cacheCategorias.length === 0) {
-    select.innerHTML = '<option value="">Nenhuma categoria cadastrada</option>';
-  } else {
-    select.innerHTML = '<option value="">Selecione uma Categoria</option>' + 
-      cacheCategorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-  }
-}
+      if (cacheCategorias.length === 0) {
+        select.innerHTML = '<option value="">Crie uma categoria primeiro</option>';
+      } else {
+        select.innerHTML = '<option value="">Selecione uma Categoria</option>' + 
+          cacheCategorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+      }
+    }
 
-// Salva a nova categoria e seleciona ela automaticamente no formulário
-async function salvarCategoria(e) {
-  e.preventDefault();
-  
-  const inputNome = document.getElementById('cat-nome');
-  const nomeCategoria = inputNome.value.trim();
+    async function salvarCategoria(e) {
+      e.preventDefault();
+      const inputNome = document.getElementById('cat-nome');
+      const nome = inputNome.value.trim();
 
-  if (!nomeCategoria) return;
+      if (!nome) return;
 
-  // Insere e solicita o retorno do objeto criado (.select())
-  const { data, error } = await _supabase
-    .from('categorias')
-    .insert([{ nome: nomeCategoria }])
-    .select();
+      const { data, error } = await _supabase.from('categorias').insert([{ nome }]).select();
 
-  if (error) {
-    console.error("Erro ao salvar categoria:", error);
-    alert("Erro ao salvar categoria. Verifique o console ou as permissões (RLS) do Supabase.");
-    return;
-  }
+      if (error) {
+        alert('Erro ao criar categoria. Verifique o console.');
+        console.error(error);
+        return;
+      }
 
-  // Limpa o campo
-  inputNome.value = '';
+      inputNome.value = '';
+      await carregarCategorias();
 
-  // Recarrega o select de categorias
-  await carregarCategorias();
+      // Seleciona a categoria recém-criada no select de produtos
+      if (data && data.length > 0) {
+        document.getElementById('prod-categoria').value = data[0].id;
+      }
 
-  // Seleciona automaticamente a categoria recém-criada no formulário de produtos
-  if (data && data.length > 0) {
-    const novaCategoriaId = data[0].id;
-    document.getElementById('prod-categoria').value = novaCategoriaId;
-  }
+      alert('Categoria adicionada com sucesso!');
+    }
 
-  alert('Categoria criada com sucesso!');
-}
-        <tr>
-          <td class="p-3 font-semibold">${p.nome}</td>
-          <td class="p-3 text-gray-500">${p.categorias ? p.categorias.nome : 'Sem Categoria'}</td>
-          <td class="p-3">R$ ${Number(p.preco).toFixed(2)}</td>
+    async function carregarProdutos() {
+      const { data } = await _supabase.from('produtos').select('*, categorias(nome)').order('created_at', { ascending: false });
+      cacheProdutos = data || [];
+      
+      const tbody = document.getElementById('tabela-produtos');
+      tbody.innerHTML = cacheProdutos.map(p => `
+        <tr class="hover:bg-gray-950/50 transition">
+          <td class="p-3 font-bold text-white">${p.nome}</td>
+          <td class="p-3 text-gray-400">${p.categorias ? p.categorias.nome : 'Sem Categoria'}</td>
+          <td class="p-3 font-semibold text-orange-400">R$ ${Number(p.preco).toFixed(2)}</td>
           <td class="p-3">
-            <span class="px-2 py-1 rounded text-xs font-bold ${p.disponivel ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-              ${p.disponivel ? 'Disponível' : 'Pausado'}
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${p.disponivel ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}">
+              ${p.disponivel ? 'Ativo' : 'Pausado'}
             </span>
           </td>
           <td class="p-3">
-            <button onclick="toggleDisponibilidade('${p.id}', ${!p.disponivel})" class="text-xs bg-gray-100 hover:bg-gray-200 p-1.5 rounded font-medium border">
+            <button onclick="toggleDisponibilidade('${p.id}', ${!p.disponivel})" class="text-xs bg-gray-800 hover:bg-gray-700 px-2.5 py-1 rounded-lg border border-gray-700 font-medium transition">
               ${p.disponivel ? '⏸️ Pausar' : '▶️ Ativar'}
             </button>
           </td>
@@ -360,7 +448,7 @@ async function salvarCategoria(e) {
       await _supabase.from('produtos').insert([produto]);
       document.getElementById('form-produto').reset();
       await carregarProdutos();
-      alert('Produto cadastrado!');
+      alert('Item cadastrado no cardápio!');
     }
 
     async function toggleDisponibilidade(id, novoStatus) {
@@ -369,7 +457,7 @@ async function salvarCategoria(e) {
     }
 
     // -------------------------------------------------------------
-    // GESTÃO DE PEDIDOS E FILTROS
+    // GESTÃO DE PEDIDOS E HISTÓRICO
     // -------------------------------------------------------------
     async function carregarPedidos() {
       const { data } = await _supabase.from('pedidos').select('*').order('created_at', { ascending: false });
@@ -384,19 +472,19 @@ async function salvarCategoria(e) {
         const itensTexto = p.itens ? p.itens.map(i => `${i.qtd}x ${i.nome}`).join(', ') : '';
 
         return `
-          <tr>
-            <td class="p-3 font-bold">#${p.numero_pedido || 'N/A'}</td>
+          <tr class="hover:bg-gray-950/50 transition">
+            <td class="p-3 font-bold text-orange-500">#${p.numero_pedido || 'N/A'}</td>
             <td class="p-3 text-xs text-gray-500">${dataFormatada}</td>
-            <td class="p-3"><b>${p.cliente_nome}</b><br><span class="text-xs text-gray-400">${p.cliente_telefone}</span></td>
-            <td class="p-3 text-xs max-w-xs truncate">${itensTexto}</td>
-            <td class="p-3 font-bold">R$ ${Number(p.total).toFixed(2)}</td>
-            <td class="p-3 text-xs">${p.forma_pagamento}</td>
+            <td class="p-3"><b>${p.cliente_nome}</b><br><span class="text-xs text-gray-500">${p.cliente_telefone}</span></td>
+            <td class="p-3 text-xs max-w-xs truncate text-gray-400">${itensTexto}</td>
+            <td class="p-3 font-extrabold text-white">R$ ${Number(p.total).toFixed(2)}</td>
+            <td class="p-3 text-xs text-gray-400">${p.forma_pagamento}</td>
             <td class="p-3">
-              <span class="px-2.5 py-1 rounded-full text-xs font-bold 
-                ${p.status === 'Entregue' ? 'bg-green-100 text-green-800' : ''}
-                ${p.status === 'Pendente' ? 'bg-amber-100 text-amber-800' : ''}
-                ${p.status === 'Em Preparo' ? 'bg-blue-100 text-blue-800' : ''}
-                ${p.status === 'Saiu para Entrega' ? 'bg-purple-100 text-purple-800' : ''}">
+              <span class="px-2.5 py-1 rounded-lg text-xs font-bold border 
+                ${p.status === 'Entregue' ? 'bg-green-500/20 text-green-400 border-green-500/30' : ''}
+                ${p.status === 'Pendente' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : ''}
+                ${p.status === 'Em Preparo' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : ''}
+                ${p.status === 'Saiu para Entrega' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : ''}">
                 ${p.status || 'Pendente'}
               </span>
             </td>
@@ -415,7 +503,7 @@ async function salvarCategoria(e) {
     }
 
     // -------------------------------------------------------------
-    // CÁLCULO DE FATURAMENTO
+    // MÉTRICAS E DASHBOARD
     // -------------------------------------------------------------
     function calcularMetricas() {
       const agora = new Date();
