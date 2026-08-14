@@ -3,153 +3,393 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout Delivery</title>
-  <!-- 1. Carrega o SDK oficial do Supabase via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 500px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; font-weight: bold; margin-bottom: 4px; }
-    input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
-    button { background-color: #25D366; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
-    button:hover { background-color: #1EBE5D; }
-  </style>
+  <title>Burger Studio - Cardápio Online (€)</title>
+  
+  <!-- Supabase JS CDN -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            burger: {
+              orange: '#f97316',
+              red: '#dc2626',
+              dark: '#111827',
+              panel: '#1f2937'
+            }
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen pb-24">
 
-  <h2>Finalizar Pedido</h2>
+  <!-- CABEÇALHO DA HERÓI E STATUS DA LOJA -->
+  <header class="bg-gradient-to-b from-gray-900 to-gray-950 border-b border-gray-800 sticky top-0 z-30 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <span class="text-4xl animate-bounce">🍔</span>
+        <div>
+          <h1 class="text-2xl font-black text-orange-500 tracking-wider uppercase">Burger Studio</h1>
+          <p class="text-xs text-gray-400 font-medium">Os melhores burgers artesanais</p>
+        </div>
+      </div>
 
-  <form id="formCheckout">
-    <div class="form-group">
-      <label for="nome">Seu Nome:</label>
-      <input type="text" id="nome" required placeholder="Ex: João Silva">
+      <!-- Badge Status da Loja -->
+      <div id="badge-status-loja" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold transition">
+        <span class="w-2.5 h-2.5 rounded-full animate-pulse bg-gray-500"></span>
+        <span class="text-gray-400">Verificando loja...</span>
+      </div>
+
+      <!-- Botão Flutuante / Fixo do Carrinho Navbar -->
+      <button onclick="abrirCarrinho()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-orange-500/20 transition">
+        <span>🛒</span>
+        <span>Carrinho</span>
+        <span id="carrinho-qtd-badge" class="bg-white text-orange-600 rounded-full w-5 h-5 text-xs flex items-center justify-center font-black">0</span>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- AVISO DE LOJA FECHADA -->
+  <div id="alerta-loja-fechada" class="hidden max-w-7xl mx-auto px-4 mt-6">
+    <div class="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-2xl flex items-center gap-3 text-sm font-bold">
+      <span class="text-2xl">🚫</span>
+      <div>
+        <p class="text-white">A loja está temporariamente FECHADA para novos pedidos.</p>
+        <p class="text-xs text-red-300 font-normal">Você pode consultar o nosso cardápio, mas o fechamento de pedidos está suspenso no momento.</p>
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 mt-8">
+
+    <!-- FILTRO DE CATEGORIAS -->
+    <div id="container-categorias" class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-8">
+      <button onclick="filtrarCategoria('todas')" class="btn-cat active-cat px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-orange-500 text-white shadow-lg shadow-orange-500/30">
+        🔥 Todos os Itens
+      </button>
+      <!-- Categorias dinâmicas entrarão aqui -->
     </div>
 
-    <div class="form-group">
-      <label for="telefone">WhatsApp / Telefone:</label>
-      <input type="tel" id="telefone" required placeholder="Ex: 11999999999">
-    </div>
+    <!-- GRID DE PRODUTOS -->
+    <section>
+      <div id="grid-produtos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Skeleton Loading -->
+        <div class="bg-gray-900 border border-gray-800 h-64 rounded-2xl animate-pulse"></div>
+        <div class="bg-gray-900 border border-gray-800 h-64 rounded-2xl animate-pulse"></div>
+        <div class="bg-gray-900 border border-gray-800 h-64 rounded-2xl animate-pulse"></div>
+      </div>
+    </section>
 
-    <div class="form-group">
-      <label for="endereco">Endereço de Entrega:</label>
-      <input type="text" id="endereco" required placeholder="Rua, Número, Bairro e Apto">
-    </div>
+  </main>
 
-    <div class="form-group">
-      <label for="pagamento">Forma de Pagamento:</label>
-      <select id="pagamento">
-        <option value="Pix">Pix</option>
-        <option value="Cartão de Crédito">Cartão de Crédito</option>
-        <option value="Cartão de Débito">Cartão de Débito</option>
-        <option value="Dinheiro">Dinheiro</option>
-      </select>
-    </div>
+  <!-- PAINEL LATERAL DO CARRINHO (SLIDE OVER) -->
+  <div id="modal-carrinho" class="fixed inset-0 bg-gray-950/80 backdrop-blur-sm z-50 hidden flex justify-end">
+    <div class="bg-gray-900 w-full max-w-md h-full shadow-2xl border-l border-gray-800 flex flex-col justify-between p-6">
+      
+      <!-- Topo Carrinho -->
+      <div>
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
+          <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+            <span>🛒</span> Seu Pedido
+          </h2>
+          <button onclick="fecharCarrinho()" class="text-gray-400 hover:text-white text-xl font-bold">✕</button>
+        </div>
 
-    <div class="form-group">
-      <label for="observacoes">Observações (Opcional):</label>
-      <textarea id="observacoes" placeholder="Ex: Tirar cebola, campainha quebrada"></textarea>
-    </div>
+        <!-- Lista de Itens no Carrinho -->
+        <div id="itens-carrinho" class="space-y-4 max-h-[45vh] overflow-y-auto pr-1">
+          <!-- Itens entram aqui -->
+        </div>
+      </div>
 
-    <button type="submit" id="btnFinalizar">Confirmar e Enviar pelo WhatsApp</button>
-  </form>
+      <!-- Formulário de Checkout e Finalização -->
+      <div class="border-t border-gray-800 pt-4 space-y-3">
+        <div class="flex justify-between items-center text-lg font-black text-white">
+          <span>Total:</span>
+          <span id="carrinho-total" class="text-orange-500">€ 0,00</span>
+        </div>
+
+        <!-- Campos do Cliente -->
+        <div class="space-y-2 text-xs">
+          <input type="text" id="cli-nome" placeholder="Seu Nome *" required class="w-full bg-gray-950 border border-gray-800 text-white p-3 rounded-xl outline-none focus:border-orange-500">
+          <input type="tel" id="cli-fone" placeholder="Telefone / WhatsApp *" required class="w-full bg-gray-950 border border-gray-800 text-white p-3 rounded-xl outline-none focus:border-orange-500">
+          <input type="text" id="cli-endereco" placeholder="Endereço de Entrega (Rua, Nº, Apto) *" required class="w-full bg-gray-950 border border-gray-800 text-white p-3 rounded-xl outline-none focus:border-orange-500">
+          
+          <select id="cli-pagamento" class="w-full bg-gray-950 border border-gray-800 text-white p-3 rounded-xl outline-none focus:border-orange-500">
+            <option value="Dinheiro">Pagamento em Dinheiro</option>
+            <option value="Cartão de Crédito/Débito">Cartão de Crédito / Débito</option>
+            <option value="MBWay / PIX">MBWay / Transferência</option>
+          </select>
+        </div>
+
+        <button id="btn-finalizar" onclick="finalizarPedido()" class="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-3.5 rounded-xl text-sm transition shadow-lg shadow-green-600/30 flex items-center justify-center gap-2">
+          <span>🚀</span> Finalizar e Enviar no WhatsApp
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <script>
     // -------------------------------------------------------------
-    // 1. CONFIGURAÇÃO DO SUPABASE E DO RESTAURANTE
+    // CONFIGURAÇÃO SUPABASE E ESTADO GLOBAL
     // -------------------------------------------------------------
-    const SUPABASE_URL = "https://shiexpkmmiwsaspdqbok.supabase.co"; // Cole a URL do seu Supabase
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; // Cole a chave ANON do seu Supabase
-    const TELEFONE_RESTAURANTE = "+351962634522"; // Digite o número com DDD e 55 na frente
-
-    // Inicializa o cliente do Supabase
+    const SUPABASE_URL = "https://shiexpkmmiwsaspdqbok.supabase.co"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Exemplo de carrinho mockado (geralmente gerado na tela do cardápio)
-    const carrinho = [
-      { produto_id: "p1", nome: "X-Burguer Artesanal", qtd: 2, preco: 28.90 },
-      { produto_id: "p2", nome: "Refrigerante Lata", qtd: 1, preco: 6.00 }
-    ];
-    const taxaEntrega = 5.00;
+    let produtosCache = [];
+    let categoriasCache = [];
+    let carrinho = [];
+    let lojaAberta = true;
+    let whatsappEmpresa = "351962634522";
 
-    // -------------------------------------------------------------
-    // 2. LÓGICA DE EXECUÇÃO DA ETAPA 2
-    // -------------------------------------------------------------
-    document.getElementById('formCheckout').addEventListener('submit', async function(e) {
-      e.preventDefault(); // Impede o recarregamento da página
-
-      const btn = document.getElementById('btnFinalizar');
-      btn.innerText = "Processando pedido...";
-      btn.disabled = true;
-
-      // A. Coleta dados do formulário
-      const clienteNome = document.getElementById('nome').value;
-      const clienteTelefone = document.getElementById('telefone').value;
-      const enderecoEntrega = document.getElementById('endereco').value;
-      const formaPagamento = document.getElementById('pagamento').value;
-      const observacoes = document.getElementById('observacoes').value;
-
-      // B. Calcula totais
-      const subtotal = carrinho.reduce((acc, item) => acc + (item.preco * item.qtd), 0);
-      const total = subtotal + taxaEntrega;
-
-      try {
-        // C. PASSO 1: Salva no Supabase na tabela 'pedidos'
-        const { data, error } = await _supabase
-          .from('pedidos')
-          .insert([
-            {
-              cliente_nome: clienteNome,
-              cliente_telefone: clienteTelefone,
-              endereco_entrega: enderecoEntrega,
-              itens: carrinho, // Salva o array de objetos no formato JSONB
-              subtotal: subtotal,
-              taxa_entrega: taxaEntrega,
-              total: total,
-              forma_pagamento: formaPagamento,
-              observacoes: observacoes,
-              status: 'Pendente' // Status inicial padrão
-            }
-          ])
-          .select(); // Força o retorno do registro criado para obtermos o 'numero_pedido'
-
-        if (error) throw error;
-
-        const pedidoCriado = data[0];
-        const numeroPedido = pedidoCriado.numero_pedido;
-
-        // D. PASSO 2: Monta a mensagem formatada para o WhatsApp
-        let textoWhats = `*NOVO PEDIDO #${numeroPedido}*\n\n`;
-        textoWhats += `*Cliente:* ${clienteNome}\n`;
-        textoWhats += `*Telefone:* ${clienteTelefone}\n`;
-        textoWhats += `*Endereço:* ${enderecoEntrega}\n\n`;
-        textoWhats += `*ITENS DO PEDIDO:*\n`;
-
-        carrinho.forEach(item => {
-          textoWhats += `• ${item.qtd}x ${item.nome} - R$ ${(item.preco * item.qtd).toFixed(2)}\n`;
-        });
-
-        if (observacoes.trim() !== "") {
-          textoWhats += `\n*Obs:* ${observacoes}\n`;
-        }
-
-        textoWhats += `\n*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)}`;
-        textoWhats += `\n*Forma de Pagamento:* ${formaPagamento}`;
-        textoWhats += `\n*TOTAL:* R$ ${total.toFixed(2)}`;
-
-        // E. PASSO 3: Abre o aplicativo do WhatsApp com a mensagem pronta
-        const urlWhatsApp = `https://wa.me/${TELEFONE_RESTAURANTE}?text=${encodeURIComponent(textoWhats)}`;
-        window.open(urlWhatsApp, '_blank');
-
-        alert(`Pedido #${numeroPedido} registrado com sucesso!`);
-
-      } catch (err) {
-        console.error("Erro ao processar pedido:", err);
-        alert("Erro ao gravar pedido no banco de dados. Tente novamente.");
-      } finally {
-        btn.innerText = "Confirmar e Enviar pelo WhatsApp";
-        btn.disabled = false;
-      }
+    document.addEventListener('DOMContentLoaded', async () => {
+      await verificarStatusLoja();
+      await carregarCategorias();
+      await carregarProdutos();
     });
+
+    // -------------------------------------------------------------
+    // VERIFICAÇÃO DO STATUS DA LOJA (ABERTA / FECHADA)
+    // -------------------------------------------------------------
+    async function verificarStatusLoja() {
+      const { data } = await _supabase.from('configuracoes').select('*').eq('id', 1).single();
+      
+      const badge = document.getElementById('badge-status-loja');
+      const alerta = document.getElementById('alerta-loja-fechada');
+
+      if (data) {
+        lojaAberta = data.loja_aberta;
+        if(data.whatsapp_numero) whatsappEmpresa = data.whatsapp_numero;
+      }
+
+      if (lojaAberta) {
+        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-green-500/30 bg-green-500/10 text-xs font-bold text-green-400";
+        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span> Aberto Agora`;
+        alerta.classList.add('hidden');
+      } else {
+        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-red-500/30 bg-red-500/10 text-xs font-bold text-red-400";
+        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Fechado`;
+        alerta.classList.remove('hidden');
+      }
+    }
+
+    // -------------------------------------------------------------
+    // CARREGAMENTO DO CARDÁPIO
+    // -------------------------------------------------------------
+    async function carregarCategorias() {
+      const { data } = await _supabase.from('categorias').select('*').order('nome');
+      categoriasCache = data || [];
+
+      const container = document.getElementById('container-categorias');
+      categoriasCache.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-900 text-gray-400 border border-gray-800 hover:text-white transition";
+        btn.innerText = cat.nome;
+        btn.onclick = () => filtrarCategoria(cat.id, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    async function carregarProdutos() {
+      const { data } = await _supabase.from('produtos').select('*').eq('disponivel', true).order('nome');
+      produtosCache = data || [];
+      renderizarProdutos(produtosCache);
+    }
+
+    function renderizarProdutos(lista) {
+      const grid = document.getElementById('grid-produtos');
+      
+      if(lista.length === 0) {
+        grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">Nenhum item disponível nesta categoria.</p>`;
+        return;
+      }
+
+      grid.innerHTML = lista.map(p => `
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-orange-500/40 transition group">
+          <div>
+            <div class="h-48 w-full bg-gray-950 relative overflow-hidden">
+              <img src="${p.imagem_url || 'https://via.placeholder.com/300'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="${p.nome}">
+            </div>
+            <div class="p-5">
+              <h3 class="font-extrabold text-lg text-white mb-1">${p.nome}</h3>
+              <p class="text-xs text-gray-400 line-clamp-2 mb-4">${p.descricao || 'Sem descrição.'}</p>
+            </div>
+          </div>
+          <div class="px-5 pb-5 flex items-center justify-between">
+            <span class="text-xl font-black text-orange-500">€ ${Number(p.preco).toFixed(2)}</span>
+            <button onclick="adicionarAoCarrinho('${p.id}')" ${!lojaAberta ? 'disabled' : ''} 
+              class="${lojaAberta ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-800 text-gray-500 cursor-not-allowed'} px-4 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1 shadow-lg">
+              <span>+</span> Adicionar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filtrarCategoria(catId, btnElement = null) {
+      if (btnElement) {
+        document.querySelectorAll('#container-categorias button').forEach(b => {
+          b.className = "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-900 text-gray-400 border border-gray-800 hover:text-white transition";
+        });
+        btnElement.className = "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-orange-500 text-white shadow-lg shadow-orange-500/30";
+      }
+
+      if(catId === 'todas') {
+        renderizarProdutos(produtosCache);
+      } else {
+        const filtrados = produtosCache.filter(p => p.categoria_id === catId);
+        renderizarProdutos(filtrados);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // GERENCIAMENTO DO CARRINHO DE COMPRAS
+    // -------------------------------------------------------------
+    function adicionarAoCarrinho(id) {
+      if(!lojaAberta) {
+        alert("A loja está fechada no momento!");
+        return;
+      }
+
+      const produto = produtosCache.find(p => p.id === id);
+      if(!produto) return;
+
+      const itemExistente = carrinho.find(item => item.id === id);
+      if(itemExistente) {
+        itemExistente.qtd++;
+      } else {
+        carrinho.push({ ...produto, qtd: 1 });
+      }
+
+      atualizarCarrinhoUI();
+      abrirCarrinho();
+    }
+
+    function alterarQtd(id, delta) {
+      const item = carrinho.find(i => i.id === id);
+      if(!item) return;
+
+      item.qtd += delta;
+      if(item.qtd <= 0) {
+        carrinho = carrinho.filter(i => i.id !== id);
+      }
+
+      atualizarCarrinhoUI();
+    }
+
+    function atualizarCarrinhoUI() {
+      const container = document.getElementById('itens-carrinho');
+      const badgeCount = document.getElementById('carrinho-qtd-badge');
+      const totalEl = document.getElementById('carrinho-total');
+
+      const totalQtd = carrinho.reduce((acc, i) => acc + i.qtd, 0);
+      const valorTotal = carrinho.reduce((acc, i) => acc + (i.preco * i.qtd), 0);
+
+      badgeCount.innerText = totalQtd;
+      totalEl.innerText = `€ ${valorTotal.toFixed(2)}`;
+
+      if(carrinho.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">Seu carrinho está vazio.</p>`;
+        return;
+      }
+
+      container.innerHTML = carrinho.map(item => `
+        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 flex items-center justify-between">
+          <div>
+            <h4 class="font-bold text-sm text-white">${item.nome}</h4>
+            <span class="text-xs text-orange-400 font-semibold">€ ${(item.preco * item.qtd).toFixed(2)}</span>
+          </div>
+          <div class="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-lg p-1">
+            <button onclick="alterarQtd('${item.id}', -1)" class="w-6 h-6 text-xs text-gray-400 hover:text-white font-bold">-</button>
+            <span class="text-xs font-bold text-white px-1">${item.qtd}</span>
+            <button onclick="alterarQtd('${item.id}', 1)" class="w-6 h-6 text-xs text-gray-400 hover:text-white font-bold">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function abrirCarrinho() { document.getElementById('modal-carrinho').classList.remove('hidden'); }
+    function fecharCarrinho() { document.getElementById('modal-carrinho').classList.add('hidden'); }
+
+    // -------------------------------------------------------------
+    // FINALIZAÇÃO DE PEDIDO (BANCO DE DADOS + WHATSAPP)
+    // -------------------------------------------------------------
+    async function finalizarPedido() {
+      if(!lojaAberta) {
+        alert("A loja está fechada. Não é possível enviar pedidos agora.");
+        return;
+      }
+
+      if(carrinho.length === 0) {
+        alert("Adicione pelo menos um item ao carrinho!");
+        return;
+      }
+
+      const nome = document.getElementById('cli-nome').value.trim();
+      const fone = document.getElementById('cli-fone').value.trim();
+      const endereco = document.getElementById('cli-endereco').value.trim();
+      const pagamento = document.getElementById('cli-pagamento').value;
+
+      if(!nome || !fone || !endereco) {
+        alert("Por favor, preencha todos os campos obrigatórios (*).");
+        return;
+      }
+
+      const total = carrinho.reduce((acc, i) => acc + (i.preco * i.qtd), 0);
+      const numeroPedido = Math.floor(1000 + Math.random() * 9000); // Gera # de pedido ex: 4832
+
+      const pedidoPayload = {
+        numero_pedido: numeroPedido,
+        cliente_nome: nome,
+        cliente_telefone: fone,
+        cliente_endereco: endereco,
+        forma_pagamento: pagamento,
+        itens: carrinho.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd, preco: i.preco })),
+        total: total,
+        status: 'Pendente'
+      };
+
+      // 1. Grava o pedido no banco do Supabase para a tela Admin
+      const { error } = await _supabase.from('pedidos').insert([pedidoPayload]);
+
+      if (error) {
+        alert("Ocorreu um erro ao salvar o pedido no banco. Tente novamente.");
+        console.error(error);
+        return;
+      }
+
+      // 2. Monta texto para envio via WhatsApp
+      let textoMsg = `🍔 *NOVO PEDIDO #${numeroPedido} - BURGER STUDIO*\n\n`;
+      textoMsg += `👤 *Cliente:* ${nome}\n`;
+      textoMsg += `📞 *Telefone:* ${fone}\n`;
+      textoMsg += `📍 *Endereço:* ${endereco}\n`;
+      textoMsg += `💳 *Pagamento:* ${pagamento}\n\n`;
+      textoMsg += `📝 *ITENS DO PEDIDO:*\n`;
+
+      carrinho.forEach(item => {
+        textoMsg += `• ${item.qtd}x ${item.nome} - € ${(item.preco * item.qtd).toFixed(2)}\n`;
+      });
+
+      textoMsg += `\n💰 *TOTAL:* € ${total.toFixed(2)}`;
+
+      // 3. Limpa o carrinho e redireciona ao WhatsApp
+      carrinho = [];
+      atualizarCarrinhoUI();
+      fecharCarrinho();
+
+      const urlWhatsapp = `https://wa.me/${whatsappEmpresa}?text=${encodeURIComponent(textoMsg)}`;
+      window.open(urlWhatsapp, '_blank');
+    }
   </script>
 </body>
 </html>
