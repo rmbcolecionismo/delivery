@@ -52,14 +52,16 @@
     </div>
   </header>
 
-  <main class="max-w-5xl mx-auto px-4 mt-6">
+  <main class="max-w-5xl mx-auto px-4 mt-4">
 
-    <!-- FILTRO DE CATEGORIAS -->
-    <div id="container-categorias" class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-6">
-      <button onclick="filtrarCategoria('todas')" class="btn-cat bg-orange-500 text-white px-4 py-2.5 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-lg shadow-orange-500/20">
-        🔥 Todas
-      </button>
-      <!-- Categorias dinâmicas serão injetadas aqui -->
+    <!-- FILTRO DE CATEGORIAS PROFISSIONAL -->
+    <div class="sticky top-[73px] z-30 bg-gray-950/80 backdrop-blur-md py-3 mb-6 -mx-4 px-4 border-b border-gray-800/50">
+      <div id="container-categorias" class="flex items-center gap-2.5 overflow-x-auto scrollbar-none py-1">
+        <button onclick="filtrarCategoria('todas', this)" class="btn-cat active-cat bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95 flex items-center gap-2 border border-orange-400/30">
+          <span>🔥</span> Todas
+        </button>
+        <!-- Categorias dinâmicas serão injetadas aqui -->
+      </div>
     </div>
 
     <!-- LISTA DE PRODUTOS -->
@@ -170,8 +172,8 @@
     // -------------------------------------------------------------
     // CONFIGURAÇÃO SUPABASE
     // -------------------------------------------------------------
-    const SUPABASE_URL = "https://shiexpkmmiwsaspdqbok.supabase.co"; 
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
+    const SUPABASE_URL = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
+    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_PUBLIC"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let carrinho = [];
@@ -216,8 +218,8 @@
 
       data.forEach(cat => {
         const btn = document.createElement('button');
-        btn.onclick = () => filtrarCategoria(cat.nome);
-        btn.className = "btn-cat bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap border border-gray-800 transition";
+        btn.onclick = (e) => filtrarCategoria(cat.nome, e.currentTarget);
+        btn.className = "btn-cat bg-gray-900/80 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 font-bold px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 hover:scale-105 active:scale-95";
         btn.innerText = cat.nome;
         container.appendChild(btn);
       });
@@ -239,9 +241,10 @@
       grid.innerHTML = lista.map(p => `
         <div class="bg-burger-panel border border-gray-800/80 rounded-3xl p-4 flex flex-col justify-between shadow-lg hover:border-gray-700 transition">
           <div>
-            <div class="h-44 w-full bg-gray-950 rounded-2xl overflow-hidden mb-3 relative border border-gray-800/50">
-              <img src="${p.imagem_url || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80'}" class="w-full h-full object-cover">
-              <span class="absolute top-2 right-2 bg-gray-950/80 backdrop-blur-md border border-gray-800 text-orange-400 font-extrabold text-[10px] px-2 py-1 rounded-lg">
+            <!-- IMAGEM COM OBJECT-CONTAIN PARA NÃO CORTAR -->
+            <div class="h-48 w-full bg-gray-950 rounded-2xl overflow-hidden mb-3 relative border border-gray-800/50 p-2 flex items-center justify-center">
+              <img src="${p.imagem_url || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80'}" class="w-full h-full object-contain drop-shadow-md">
+              <span class="absolute top-2 right-2 bg-gray-950/90 backdrop-blur-md border border-gray-800 text-orange-400 font-extrabold text-[10px] px-2.5 py-1 rounded-lg">
                 ${p.categoria || 'Geral'}
               </span>
             </div>
@@ -251,7 +254,7 @@
 
           <div class="flex items-center justify-between pt-2 border-t border-gray-800/60">
             <span class="text-lg font-black text-orange-500">€ ${Number(p.preco).toFixed(2)}</span>
-            <button onclick="adicionarAoCarrinho('${p.id}')" class="bg-orange-500 hover:bg-orange-600 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-orange-500/20">
+            <button onclick="adicionarAoCarrinho('${p.id}')" class="bg-orange-500 hover:bg-orange-600 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95">
               <span>+</span> Adicionar
             </button>
           </div>
@@ -259,7 +262,17 @@
       `).join('');
     }
 
-    function filtrarCategoria(nomeCat) {
+    function filtrarCategoria(nomeCat, el) {
+      // Atualizar estado visual do menu de categorias
+      if (el) {
+        document.querySelectorAll('.btn-cat').forEach(btn => {
+          btn.className = "btn-cat bg-gray-900/80 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 font-bold px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 hover:scale-105 active:scale-95";
+        });
+        
+        el.className = "btn-cat active-cat bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95 flex items-center gap-2 border border-orange-400/30";
+      }
+
+      // Filtrar produtos
       if (nomeCat === 'todas') {
         renderizarProdutos(produtosCache);
       } else {
