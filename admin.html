@@ -269,30 +269,65 @@
     // -------------------------------------------------------------
     // GESTÃO DE CATEGORIAS E PRODUTOS
     // -------------------------------------------------------------
-    async function carregarCategorias() {
-      const { data } = await _supabase.from('categorias').select('*').order('nome');
-      cacheCategorias = data || [];
-      
-      const select = document.getElementById('prod-categoria');
-      select.innerHTML = '<option value="">Selecione uma Categoria</option>' + 
-        cacheCategorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-    }
+ // Carrega as categorias e preenche o <select> do produto
+async function carregarCategorias() {
+  const { data, error } = await _supabase
+    .from('categorias')
+    .select('id, nome')
+    .order('nome', { ascending: true });
 
-    async function salvarCategoria(e) {
-      e.preventDefault();
-      const nome = document.getElementById('cat-nome').value;
-      await _supabase.from('categorias').insert([{ nome }]);
-      document.getElementById('cat-nome').value = '';
-      await carregarCategorias();
-      alert('Categoria criada!');
-    }
+  if (error) {
+    console.error("Erro ao carregar categorias:", error);
+    return;
+  }
 
-    async function carregarProdutos() {
-      const { data } = await _supabase.from('produtos').select('*, categorias(nome)').order('created_at', { ascending: false });
-      cacheProdutos = data || [];
-      
-      const tbody = document.getElementById('tabela-produtos');
-      tbody.innerHTML = cacheProdutos.map(p => `
+  cacheCategorias = data || [];
+  
+  const select = document.getElementById('prod-categoria');
+  
+  if (cacheCategorias.length === 0) {
+    select.innerHTML = '<option value="">Nenhuma categoria cadastrada</option>';
+  } else {
+    select.innerHTML = '<option value="">Selecione uma Categoria</option>' + 
+      cacheCategorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  }
+}
+
+// Salva a nova categoria e seleciona ela automaticamente no formulário
+async function salvarCategoria(e) {
+  e.preventDefault();
+  
+  const inputNome = document.getElementById('cat-nome');
+  const nomeCategoria = inputNome.value.trim();
+
+  if (!nomeCategoria) return;
+
+  // Insere e solicita o retorno do objeto criado (.select())
+  const { data, error } = await _supabase
+    .from('categorias')
+    .insert([{ nome: nomeCategoria }])
+    .select();
+
+  if (error) {
+    console.error("Erro ao salvar categoria:", error);
+    alert("Erro ao salvar categoria. Verifique o console ou as permissões (RLS) do Supabase.");
+    return;
+  }
+
+  // Limpa o campo
+  inputNome.value = '';
+
+  // Recarrega o select de categorias
+  await carregarCategorias();
+
+  // Seleciona automaticamente a categoria recém-criada no formulário de produtos
+  if (data && data.length > 0) {
+    const novaCategoriaId = data[0].id;
+    document.getElementById('prod-categoria').value = novaCategoriaId;
+  }
+
+  alert('Categoria criada com sucesso!');
+}
         <tr>
           <td class="p-3 font-semibold">${p.nome}</td>
           <td class="p-3 text-gray-500">${p.categorias ? p.categorias.nome : 'Sem Categoria'}</td>
