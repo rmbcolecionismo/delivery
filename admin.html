@@ -41,6 +41,12 @@
           <p class="text-xs text-gray-400 font-medium">Painel Administrativo (€)</p>
         </div>
       </div>
+
+      <!-- BOTÃO DE STATUS DA LOJA (ABERTA / FECHADA) -->
+      <button id="btn-toggle-loja" onclick="alternarStatusLoja()" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border bg-gray-800 border-gray-700 text-gray-400">
+        <span class="w-2.5 h-2.5 rounded-full bg-gray-500 animate-pulse"></span>
+        <span>Verificando Loja...</span>
+      </button>
       
       <!-- Menu de Abas e Links -->
       <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-900 p-1.5 rounded-xl border border-gray-800 flex-wrap gap-y-2">
@@ -280,6 +286,7 @@
     let cacheCategorias = [];
     let cacheProdutos = [];
     let cachePedidos = [];
+    let statusLojaAtual = true;
 
     // -------------------------------------------------------------
     // INICIALIZAÇÃO SEGURA
@@ -334,6 +341,7 @@
     }
 
     async function inicializarPainel() {
+      await checarStatusLojaAdmin();
       await carregarCategorias();
       await carregarProdutos();
       await carregarPedidos();
@@ -347,6 +355,41 @@
 
     function mostrarModalLogin() { document.getElementById('modal-login').classList.remove('hidden'); }
     function esconderModalLogin() { document.getElementById('modal-login').classList.add('hidden'); }
+
+    // -------------------------------------------------------------
+    // CONTROLE DE STATUS DA LOJA (ABERTA / FECHADA)
+    // -------------------------------------------------------------
+    async function checarStatusLojaAdmin() {
+      const { data } = await _supabase.from('configuracoes').select('loja_aberta').eq('id', 1).single();
+      if (data) {
+        statusLojaAtual = data.loja_aberta;
+        atualizarBotaoLojaUI();
+      }
+    }
+
+    function atualizarBotaoLojaUI() {
+      const btn = document.getElementById('btn-toggle-loja');
+      if (statusLojaAtual) {
+        btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500 hover:text-white";
+        btn.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span> Loja ABERTA (Clique p/ Fechar)`;
+      } else {
+        btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white";
+        btn.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Loja FECHADA (Clique p/ Abrir)`;
+      }
+    }
+
+    async function alternarStatusLoja() {
+      const novoStatus = !statusLojaAtual;
+      const { error } = await _supabase.from('configuracoes').update({ loja_aberta: novoStatus }).eq('id', 1);
+
+      if (!error) {
+        statusLojaAtual = novoStatus;
+        atualizarBotaoLojaUI();
+      } else {
+        alert("Erro ao alterar o status da loja no banco de dados.");
+        console.error(error);
+      }
+    }
 
     // -------------------------------------------------------------
     // CONTROLE DE ABAS
