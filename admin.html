@@ -356,41 +356,66 @@
     function mostrarModalLogin() { document.getElementById('modal-login').classList.remove('hidden'); }
     function esconderModalLogin() { document.getElementById('modal-login').classList.add('hidden'); }
 
-    // -------------------------------------------------------------
-    // CONTROLE DE STATUS DA LOJA (ABERTA / FECHADA)
-    // -------------------------------------------------------------
-    async function checarStatusLojaAdmin() {
-      const { data } = await _supabase.from('configuracoes').select('loja_aberta').eq('id', 1).single();
-      if (data) {
-        statusLojaAtual = data.loja_aberta;
-        atualizarBotaoLojaUI();
-      }
-    }
+   // -------------------------------------------------------------
+// CONTROLE DE STATUS DA LOJA (PERSISTENTE)
+// -------------------------------------------------------------
+async function checarStatusLojaAdmin() {
+  const btn = document.getElementById('btn-toggle-loja');
+  btn.innerText = "Carregando...";
 
-    function atualizarBotaoLojaUI() {
-      const btn = document.getElementById('btn-toggle-loja');
-      if (statusLojaAtual) {
-        btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500 hover:text-white";
-        btn.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span> Loja ABERTA (Clique p/ Fechar)`;
-      } else {
-        btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white";
-        btn.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Loja FECHADA (Clique p/ Abrir)`;
-      }
-    }
+  // Busca a configuração do ID 1
+  const { data, error } = await _supabase.from('configuracoes').select('loja_aberta').eq('id', 1).maybeSingle();
 
-    async function alternarStatusLoja() {
-      const novoStatus = !statusLojaAtual;
-      const { error } = await _supabase.from('configuracoes').update({ loja_aberta: novoStatus }).eq('id', 1);
+  if (error) {
+    console.error("Erro ao carregar status da loja:", error);
+    return;
+  }
 
-      if (!error) {
-        statusLojaAtual = novoStatus;
-        atualizarBotaoLojaUI();
-      } else {
-        alert("Erro ao alterar o status da loja no banco de dados.");
-        console.error(error);
-      }
-    }
+  if (data) {
+    statusLojaAtual = data.loja_aberta;
+  } else {
+    // Se não existir o registro ID 1, cria um padrão aberto
+    await _supabase.from('configuracoes').upsert({ id: 1, loja_aberta: true });
+    statusLojaAtual = true;
+  }
 
+  atualizarBotaoLojaUI();
+}
+
+function atualizarBotaoLojaUI() {
+  const btn = document.getElementById('btn-toggle-loja');
+  if (statusLojaAtual) {
+    btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500 hover:text-white";
+    btn.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span> Loja ABERTA (Clique p/ Fechar)`;
+  } else {
+    btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white";
+    btn.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Loja FECHADA (Clique p/ Abrir)`;
+  }
+}
+
+async function alternarStatusLoja() {
+  const novoStatus = !statusLojaAtual;
+  const btn = document.getElementById('btn-toggle-loja');
+  
+  btn.disabled = true;
+  btn.innerText = "Salvando...";
+
+  // Salva usando upsert no registro de ID 1
+  const { error } = await _supabase
+    .from('configuracoes')
+    .upsert({ id: 1, loja_aberta: novoStatus });
+
+  btn.disabled = false;
+
+  if (!error) {
+    statusLojaAtual = novoStatus;
+    atualizarBotaoLojaUI();
+  } else {
+    alert("Erro ao alterar o status da loja. Verifique as permissões da tabela 'configuracoes' no Supabase.");
+    console.error("Erro Supabase:", error);
+    atualizarBotaoLojaUI();
+  }
+}
     // -------------------------------------------------------------
     // CONTROLE DE ABAS
     // -------------------------------------------------------------
