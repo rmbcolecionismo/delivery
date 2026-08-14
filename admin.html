@@ -9,14 +9,20 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans pb-12">
 
-  <!-- Navegação -->
+  <!-- NAVEGAÇÃO SUPERIOR -->
   <nav class="bg-gray-900 text-white p-4 shadow-md mb-6">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <h1 class="text-xl font-bold flex items-center gap-2">⚙️ Admin Delivery</h1>
-      <div class="space-x-4">
-        <button onclick="mudarAba('dashboard')" class="hover:text-amber-400 font-semibold">📊 Dashboard</button>
-        <button onclick="mudarAba('produtos')" class="hover:text-amber-400 font-semibold">🍔 Cardápio</button>
-        <button onclick="mudarAba('pedidos')" class="hover:text-amber-400 font-semibold">📋 Pedidos</button>
+      
+      <div class="flex items-center space-x-4">
+        <button onclick="mudarAba('dashboard')" class="hover:text-amber-400 font-semibold transition">📊 Dashboard</button>
+        <button onclick="mudarAba('produtos')" class="hover:text-amber-400 font-semibold transition">🍔 Cardápio</button>
+        <button onclick="mudarAba('pedidos')" class="hover:text-amber-400 font-semibold transition">📋 Pedidos</button>
+        
+        <!-- Botão Logout -->
+        <button onclick="fazerLogout()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition ml-2">
+          🚪 Sair
+        </button>
       </div>
     </div>
   </nav>
@@ -27,25 +33,25 @@
     <!-- ABA 1: DASHBOARD DE FATURAMENTO -->
     <!-- ========================================== -->
     <section id="aba-dashboard">
-      <h2 class="text-2xl font-bold mb-4">Relatório de Faturamento</h2>
+      <h2 class="text-2xl font-bold mb-1">Relatório de Faturamento</h2>
       <p class="text-sm text-gray-500 mb-6">Valores calculados com base em pedidos marcados como <b>"Entregue"</b>.</p>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Faturamento Diário -->
-        <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
-          <p class="text-sm font-semibold text-gray-500 uppercase">Faturamento Hoje</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Faturamento Hoje</p>
           <h3 id="fat-diario" class="text-3xl font-extrabold text-green-600 mt-2">R$ 0,00</h3>
         </div>
 
         <!-- Faturamento Semanal -->
-        <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
-          <p class="text-sm font-semibold text-gray-500 uppercase">Faturamento nos Últimos 7 Dias</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Últimos 7 Dias</p>
           <h3 id="fat-semanal" class="text-3xl font-extrabold text-blue-600 mt-2">R$ 0,00</h3>
         </div>
 
         <!-- Faturamento Mensal -->
-        <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
-          <p class="text-sm font-semibold text-gray-500 uppercase">Faturamento nos Últimos 30 Dias</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Últimos 30 Dias</p>
           <h3 id="fat-mensal" class="text-3xl font-extrabold text-purple-600 mt-2">R$ 0,00</h3>
         </div>
       </div>
@@ -60,36 +66,36 @@
         <!-- Formulários de Cadastro -->
         <div class="space-y-6">
           <!-- Form Categorias -->
-          <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <h3 class="text-lg font-bold mb-4">➕ Nova Categoria</h3>
             <form id="form-categoria" onsubmit="salvarCategoria(event)" class="space-y-3">
-              <input type="text" id="cat-nome" placeholder="Nome (Ex: Sobremesas)" required class="w-full border p-2 rounded">
-              <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 rounded">Salvar Categoria</button>
+              <input type="text" id="cat-nome" placeholder="Nome (Ex: Sobremesas)" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
+              <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 rounded-lg text-sm transition">Salvar Categoria</button>
             </form>
           </div>
 
           <!-- Form Produtos -->
-          <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <h3 class="text-lg font-bold mb-4">➕ Novo Produto</h3>
             <form id="form-produto" onsubmit="salvarProduto(event)" class="space-y-3">
-              <select id="prod-categoria" required class="w-full border p-2 rounded">
+              <select id="prod-categoria" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
                 <option value="">Selecione uma Categoria</option>
               </select>
-              <input type="text" id="prod-nome" placeholder="Nome do Produto" required class="w-full border p-2 rounded">
-              <textarea id="prod-desc" placeholder="Descrição/Ingredientes" class="w-full border p-2 rounded h-20"></textarea>
-              <input type="number" step="0.01" id="prod-preco" placeholder="Preço (Ex: 29.90)" required class="w-full border p-2 rounded">
-              <input type="url" id="prod-img" placeholder="URL da Imagem (https://...)" class="w-full border p-2 rounded">
-              <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">Cadastrar Produto</button>
+              <input type="text" id="prod-nome" placeholder="Nome do Produto" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
+              <textarea id="prod-desc" placeholder="Descrição/Ingredientes" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500 h-20"></textarea>
+              <input type="number" step="0.01" id="prod-preco" placeholder="Preço (Ex: 29.90)" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
+              <input type="url" id="prod-img" placeholder="URL da Imagem (https://...)" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500">
+              <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg text-sm transition">Cadastrar Produto</button>
             </form>
           </div>
         </div>
 
         <!-- Lista de Produtos Cadastrados -->
-        <div class="md:col-span-2 bg-white p-6 rounded-xl shadow border border-gray-200">
+        <div class="md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
           <h3 class="text-lg font-bold mb-4">Produtos no Cardápio</h3>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-              <thead class="bg-gray-100 text-gray-600 uppercase">
+              <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-bold border-b">
                 <tr>
                   <th class="p-3">Produto</th>
                   <th class="p-3">Categoria</th>
@@ -110,24 +116,24 @@
     <!-- ABA 3: LISTA COMPLETA DE PEDIDOS -->
     <!-- ========================================== -->
     <section id="aba-pedidos" class="hidden">
-      <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         
         <!-- Filtros de Status -->
         <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
           <h2 class="text-xl font-bold">Histórico de Pedidos</h2>
           <div class="flex gap-2 flex-wrap">
-            <button onclick="filtrarPedidos('Todos')" class="btn-filtro px-3 py-1 bg-gray-800 text-white rounded-full text-xs font-bold">Todos</button>
-            <button onclick="filtrarPedidos('Pendente')" class="btn-filtro px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">Pendente</button>
-            <button onclick="filtrarPedidos('Em Preparo')" class="btn-filtro px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Em Preparo</button>
-            <button onclick="filtrarPedidos('Saiu para Entrega')" class="btn-filtro px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold">Saiu p/ Entrega</button>
-            <button onclick="filtrarPedidos('Entregue')" class="btn-filtro px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Entregue</button>
+            <button onclick="filtrarPedidos('Todos')" class="px-3 py-1 bg-gray-800 text-white rounded-full text-xs font-bold">Todos</button>
+            <button onclick="filtrarPedidos('Pendente')" class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">Pendente</button>
+            <button onclick="filtrarPedidos('Em Preparo')" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Em Preparo</button>
+            <button onclick="filtrarPedidos('Saiu para Entrega')" class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold">Saiu p/ Entrega</button>
+            <button onclick="filtrarPedidos('Entregue')" class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Entregue</button>
           </div>
         </div>
 
         <!-- Tabela -->
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
-            <thead class="bg-gray-100 text-gray-600 uppercase">
+            <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-bold border-b">
               <tr>
                 <th class="p-3">#</th>
                 <th class="p-3">Data/Hora</th>
@@ -147,9 +153,45 @@
 
   </div>
 
+  <!-- ========================================== -->
+  <!-- MODAL DE LOGIN ADMIN (SOBREPOSTO) -->
+  <!-- ========================================== -->
+  <div id="modal-login" class="fixed inset-0 bg-gray-900 bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
+      
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-amber-100 text-amber-600 rounded-full mb-3 text-2xl">
+          🔐
+        </div>
+        <h2 class="text-2xl font-extrabold text-gray-900">Acesso Restrito</h2>
+        <p class="text-sm text-gray-500 mt-1">Entre com suas credenciais do Supabase Auth.</p>
+      </div>
+
+      <div id="login-erro" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg text-center font-medium"></div>
+
+      <form id="form-login" onsubmit="autenticarAdmin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">E-mail do Administrador</label>
+          <input type="email" id="email-login" required placeholder="admin@restaurante.com" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
+          <input type="password" id="senha-login" required placeholder="••••••••" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+        </div>
+
+        <button type="submit" id="btn-login" class="w-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-200">
+          Entrar no Painel
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- LÓGICA JAVASCRIPT -->
   <script>
     // -------------------------------------------------------------
-    // CONFIGURAÇÕES SUPABASE
+    // CONFIGURAÇÃO SUPABASE
     // -------------------------------------------------------------
     const SUPABASE_URL = "https://eyddrnjrewehojfmskvd.supabase.co"; 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
@@ -159,14 +201,64 @@
     let cacheProdutos = [];
     let cachePedidos = [];
 
+    // -------------------------------------------------------------
+    // INICIALIZAÇÃO E AUTENTICAÇÃO
+    // -------------------------------------------------------------
     document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await _supabase.auth.getSession();
+
+      if (session) {
+        esconderModalLogin();
+        await inicializarPainel();
+      } else {
+        mostrarModalLogin();
+      }
+    });
+
+    async function autenticarAdmin(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email-login').value;
+      const password = document.getElementById('senha-login').value;
+      const btn = document.getElementById('btn-login');
+      const divErro = document.getElementById('login-erro');
+
+      btn.disabled = true;
+      btn.innerText = "Entrando...";
+      divErro.classList.add('hidden');
+
+      const { error } = await _supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        divErro.innerText = "E-mail ou senha inválidos!";
+        divErro.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerText = "Entrar no Painel";
+        return;
+      }
+
+      esconderModalLogin();
+      await inicializarPainel();
+    }
+
+    async function inicializarPainel() {
       await carregarCategorias();
       await carregarProdutos();
       await carregarPedidos();
       calcularMetricas();
-    });
+    }
 
-    // Controla as Abas do Painel
+    async function fazerLogout() {
+      await _supabase.auth.signOut();
+      window.location.reload();
+    }
+
+    function mostrarModalLogin() { document.getElementById('modal-login').classList.remove('hidden'); }
+    function esconderModalLogin() { document.getElementById('modal-login').classList.add('hidden'); }
+
+    // -------------------------------------------------------------
+    // NAVEGAÇÃO DE ABAS
+    // -------------------------------------------------------------
     function mudarAba(aba) {
       document.getElementById('aba-dashboard').classList.add('hidden');
       document.getElementById('aba-produtos').classList.add('hidden');
@@ -192,7 +284,7 @@
       await _supabase.from('categorias').insert([{ nome }]);
       document.getElementById('cat-nome').value = '';
       await carregarCategorias();
-      alert('Categoria salva!');
+      alert('Categoria criada!');
     }
 
     async function carregarProdutos() {
@@ -211,7 +303,7 @@
             </span>
           </td>
           <td class="p-3">
-            <button onclick="toggleDisponibilidade('${p.id}', ${!p.disponivel})" class="text-xs bg-gray-200 hover:bg-gray-300 p-1.5 rounded">
+            <button onclick="toggleDisponibilidade('${p.id}', ${!p.disponivel})" class="text-xs bg-gray-100 hover:bg-gray-200 p-1.5 rounded font-medium border">
               ${p.disponivel ? '⏸️ Pausar' : '▶️ Ativar'}
             </button>
           </td>
@@ -233,7 +325,7 @@
       await _supabase.from('produtos').insert([produto]);
       document.getElementById('form-produto').reset();
       await carregarProdutos();
-      alert('Produto cadastrado com sucesso!');
+      alert('Produto cadastrado!');
     }
 
     async function toggleDisponibilidade(id, novoStatus) {
@@ -242,7 +334,7 @@
     }
 
     // -------------------------------------------------------------
-    // GESTÃO E FILTROS DE PEDIDOS
+    // GESTÃO DE PEDIDOS E FILTROS
     // -------------------------------------------------------------
     async function carregarPedidos() {
       const { data } = await _supabase.from('pedidos').select('*').order('created_at', { ascending: false });
@@ -265,7 +357,7 @@
             <td class="p-3 font-bold">R$ ${Number(p.total).toFixed(2)}</td>
             <td class="p-3 text-xs">${p.forma_pagamento}</td>
             <td class="p-3">
-              <span class="px-2 py-1 rounded-full text-xs font-bold 
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold 
                 ${p.status === 'Entregue' ? 'bg-green-100 text-green-800' : ''}
                 ${p.status === 'Pendente' ? 'bg-amber-100 text-amber-800' : ''}
                 ${p.status === 'Em Preparo' ? 'bg-blue-100 text-blue-800' : ''}
@@ -288,7 +380,7 @@
     }
 
     // -------------------------------------------------------------
-    // CÁLCULO DE FATURAMENTO (DIÁRIO, SEMANAL E MENSAL)
+    // CÁLCULO DE FATURAMENTO
     // -------------------------------------------------------------
     function calcularMetricas() {
       const agora = new Date();
@@ -300,12 +392,9 @@
       const trintaDiasAtras = new Date();
       trintaDiasAtras.setDate(agora.getDate() - 30);
 
-      // Considera apenas pedidos com status "Entregue"
       const pedidosEntregues = cachePedidos.filter(p => p.status === 'Entregue');
 
-      let diario = 0;
-      let semanal = 0;
-      let mensal = 0;
+      let diario = 0, semanal = 0, mensal = 0;
 
       pedidosEntregues.forEach(p => {
         const dataPedido = new Date(p.created_at);
