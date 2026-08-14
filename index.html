@@ -180,6 +180,7 @@
     let produtosCache = [];
     let tipoEntregaAtual = 'Entrega'; 
     let taxaEntregaValor = 2.00;
+    let lojaAberta = true; // Variável global para controlar se a loja está aberta
 
     document.addEventListener('DOMContentLoaded', async () => {
       await checarStatusLoja();
@@ -197,8 +198,11 @@
         const { data } = await _supabase.from('configuracoes').select('loja_aberta').eq('id', 1).maybeSingle();
         const badge = document.getElementById('badge-status-loja');
         if (data && data.loja_aberta === false) {
+          lojaAberta = false;
           badge.className = "inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20";
           badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Fechado`;
+        } else {
+          lojaAberta = true;
         }
       } catch (e) {
         console.error("Erro status loja:", e);
@@ -259,7 +263,6 @@
       grid.innerHTML = lista.map(p => `
         <div class="bg-burger-panel border border-gray-800/80 rounded-3xl p-4 flex flex-col justify-between shadow-lg hover:border-gray-700 transition">
           <div>
-            <!-- IMAGEM COM OBJECT-CONTAIN PARA NÃO CORTAR -->
             <div class="h-48 w-full bg-gray-950 rounded-2xl overflow-hidden mb-3 relative border border-gray-800/50 p-2 flex items-center justify-center">
               <img src="${p.imagem_url || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80'}" class="w-full h-full object-contain drop-shadow-md">
               <span class="absolute top-2 right-2 bg-gray-950/90 backdrop-blur-md border border-gray-800 text-orange-400 font-extrabold text-[10px] px-2.5 py-1 rounded-lg">
@@ -272,16 +275,21 @@
 
           <div class="flex items-center justify-between pt-2 border-t border-gray-800/60">
             <span class="text-lg font-black text-orange-500">€ ${Number(p.preco).toFixed(2)}</span>
-            <button onclick="adicionarAoCarrinho('${p.id}')" class="bg-orange-500 hover:bg-orange-600 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95">
-              <span>+</span> Adicionar
-            </button>
+            ${
+              lojaAberta 
+              ? `<button onclick="adicionarAoCarrinho('${p.id}')" class="bg-orange-500 hover:bg-orange-600 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95">
+                  <span>+</span> Adicionar
+                 </button>`
+              : `<span class="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-xl text-[11px] font-bold">
+                  Indisponível
+                 </span>`
+            }
           </div>
         </div>
       `).join('');
     }
 
     function filtrarCategoria(nomeCat, evt) {
-      // Atualizar visual do botão clicado
       if (evt && evt.currentTarget) {
         document.querySelectorAll('.btn-cat').forEach(btn => {
           btn.className = "btn-cat bg-gray-900/80 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 font-bold px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 hover:scale-105 active:scale-95";
@@ -290,7 +298,6 @@
         evt.currentTarget.className = "btn-cat active-cat bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all duration-200 shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95 flex items-center gap-2 border border-orange-400/30";
       }
 
-      // Filtrar produtos
       if (nomeCat === 'todas') {
         renderizarProdutos(produtosCache);
       } else {
@@ -303,6 +310,8 @@
     // LÓGICA DO CARRINHO E SELEÇÃO DE TIPO DE ENTREGA
     // -------------------------------------------------------------
     function adicionarAoCarrinho(id) {
+      if (!lojaAberta) return; // Trava extra para prevenir adições se a loja fechar
+
       const prod = produtosCache.find(p => p.id === id);
       if (!prod) return;
 
@@ -414,6 +423,11 @@
     // -------------------------------------------------------------
     async function finalizarPedido(e) {
       e.preventDefault();
+
+      if (!lojaAberta) {
+        alert("Desculpe, a loja está fechada no momento.");
+        return;
+      }
 
       if (carrinho.length === 0) return;
 
