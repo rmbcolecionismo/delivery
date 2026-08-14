@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Burger Studio - Cardápio Online (€)</title>
+  <title>Burger Studio - Cardápio Digital (€)</title>
   
   <!-- Supabase JS CDN -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -18,8 +18,8 @@
             burger: {
               orange: '#f97316',
               red: '#dc2626',
-              dark: '#111827',
-              panel: '#1f2937'
+              dark: '#090d16',
+              panel: '#111827'
             }
           }
         }
@@ -27,274 +27,238 @@
     }
   </script>
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans min-h-screen pb-24">
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen pb-24 selection:bg-orange-500 selection:text-white">
 
-  <!-- CABEÇALHO DA HERÓI E STATUS DA LOJA -->
-  <header class="bg-gradient-to-b from-gray-900 to-gray-950 border-b border-gray-800 sticky top-0 z-30 shadow-xl">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+  <!-- BARRA SUPERIOR E BANNER DE STATUS -->
+  <header class="bg-burger-panel/90 backdrop-blur-md border-b border-gray-800/80 text-white sticky top-0 z-40 shadow-xl">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
       
-      <!-- Brand Logo -->
+      <!-- Logo da Loja -->
       <div class="flex items-center gap-3">
-        <span class="text-4xl animate-bounce">🍔</span>
+        <span class="text-4xl filter drop-shadow-md">🍔</span>
         <div>
-          <h1 class="text-2xl font-black text-orange-500 tracking-wider uppercase">Burger Studio</h1>
-          <p class="text-xs text-gray-400 font-medium">Os melhores burgers artesanais</p>
+          <h1 class="text-2xl font-black tracking-wider text-orange-500 uppercase leading-none">Burger Studio</h1>
+          <p class="text-xs text-gray-400 font-medium mt-1">Os melhores hambúrgueres artesanais</p>
         </div>
       </div>
 
-      <!-- Badge Status da Loja -->
-      <div id="badge-status-loja" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold transition">
-        <span class="w-2.5 h-2.5 rounded-full animate-pulse bg-gray-500"></span>
-        <span class="text-gray-400">Verificando loja...</span>
+      <!-- STATUS DA LOJA EM TEMPO REAL -->
+      <div id="badge-loja" class="px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 bg-gray-800 text-gray-400 border border-gray-700 shadow-inner">
+        <span class="w-2.5 h-2.5 rounded-full bg-gray-500 animate-pulse"></span>
+        <span>Verificando Loja...</span>
       </div>
-
-      <!-- Botão Flutuante / Fixo do Carrinho Navbar -->
-      <button onclick="abrirCarrinho()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-orange-500/20 transition">
-        <span>🛒</span>
-        <span>Carrinho</span>
-        <span id="carrinho-qtd-badge" class="bg-white text-orange-600 rounded-full w-5 h-5 text-xs flex items-center justify-center font-black">0</span>
-      </button>
 
     </div>
   </header>
 
-  <!-- AVISO DE LOJA FECHADA -->
-  <div id="alerta-loja-fechada" class="hidden max-w-7xl mx-auto px-4 mt-6">
-    <div class="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-2xl flex items-center gap-3 text-sm font-bold">
-      <span class="text-2xl">🚫</span>
-      <div>
-        <p class="text-white">A loja está temporariamente FECHADA para novos pedidos.</p>
-        <p class="text-xs text-red-300 font-normal">Você pode consultar o nosso cardápio, mas o fechamento de pedidos está suspenso no momento.</p>
-      </div>
-    </div>
+  <!-- ALERTA QUANDO A LOJA ESTÁ FECHADA -->
+  <div id="alerta-loja-fechada" class="hidden bg-red-600/20 border-b border-red-500/30 text-red-300 text-center py-3 px-4 text-xs font-bold">
+    🚫 No momento a loja está <b>FECHADA</b> para novos pedidos. Você pode visualizar nosso cardápio!
   </div>
 
-  <main class="max-w-7xl mx-auto px-4 mt-8">
+  <main class="max-w-6xl mx-auto px-4 mt-8">
 
-    <!-- FILTRO DE CATEGORIAS -->
-    <div id="container-categorias" class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-8">
-      <button onclick="filtrarCategoria('todas')" class="btn-cat active-cat px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-orange-500 text-white shadow-lg shadow-orange-500/30">
-        🔥 Todos os Itens
-      </button>
-      <!-- Categorias dinâmicas entrarão aqui -->
-    </div>
+    <!-- MENU DE CATEGORIAS PROFISSIONAL -->
+    <section class="mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-xs font-black text-orange-500 uppercase tracking-widest flex items-center gap-1.5">
+            <span>✨</span> Explore nosso Menu
+          </h2>
+          <p class="text-xs text-gray-400 font-medium">Selecione uma categoria abaixo</p>
+        </div>
+      </div>
+
+      <!-- CARROSSEL / GRID DE CATEGORIAS -->
+      <div id="container-categorias" class="flex gap-3 overflow-x-auto pb-4 pt-1 scrollbar-none snap-x touch-pan-x">
+        <button onclick="filtrarCategoria('todas')" id="cat-todas" class="btn-cat group snap-start flex items-center gap-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 py-3 rounded-2xl text-xs font-black whitespace-nowrap shadow-lg shadow-orange-500/25 border border-orange-400/30 transition-all duration-300 transform scale-105">
+          <span class="text-base group-hover:scale-110 transition-transform">🔥</span>
+          <span>Todas</span>
+        </button>
+      </div>
+    </section>
 
     <!-- GRID DE PRODUTOS -->
     <section>
+      <div class="flex justify-between items-center mb-6">
+        <h2 id="titulo-categoria" class="text-xl font-black text-white uppercase tracking-wide flex items-center gap-2">
+          <span>🍔</span> Cardápio
+        </h2>
+      </div>
+
       <div id="grid-produtos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Skeleton Loading -->
-        <div class="bg-gray-900 border border-gray-800 h-64 rounded-2xl animate-pulse"></div>
-        <div class="bg-gray-900 border border-gray-800 h-64 rounded-2xl animate-pulse"></div>
-        <div class="bg-gray-900 border border-gray-800 h-64 rounded-2xl animate-pulse"></div>
+        <p class="col-span-full text-center text-gray-500 py-12">Carregando cardápio...</p>
       </div>
     </section>
 
   </main>
 
-  <!-- PAINEL LATERAL DO CARRINHO (SLIDE OVER) -->
-  <div id="modal-carrinho" class="fixed inset-0 bg-gray-950/80 backdrop-blur-sm z-50 hidden flex justify-end">
-    <div class="bg-gray-900 w-full max-w-md h-full shadow-2xl border-l border-gray-800 flex flex-col justify-between p-6">
-      
-      <!-- Topo Carrinho -->
+  <!-- BARRA FLUTUANTE DO CARRINHO (RODAPÉ) -->
+  <div id="barra-carrinho" class="fixed bottom-0 inset-x-0 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 p-4 z-30 shadow-2xl transition-transform transform translate-y-full">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
       <div>
-        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
-          <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
-            <span>🛒</span> Seu Pedido
-          </h2>
-          <button onclick="fecharCarrinho()" class="text-gray-400 hover:text-white text-xl font-bold">✕</button>
-        </div>
+        <p class="text-xs text-gray-400 font-medium">Total do Pedido</p>
+        <p id="carrinho-total" class="text-2xl font-black text-orange-500">€ 0,00</p>
+      </div>
+      <button onclick="abrirModalCarrinho()" class="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold px-6 py-3 rounded-xl text-sm transition shadow-lg shadow-orange-500/30 flex items-center gap-2">
+        <span>🛒 Ver Carrinho</span>
+        <span id="carrinho-qtd" class="bg-white/20 px-2 py-0.5 rounded-md text-xs">0</span>
+      </button>
+    </div>
+  </div>
 
-        <!-- Lista de Itens no Carrinho -->
-        <div id="itens-carrinho" class="space-y-4 max-h-[45vh] overflow-y-auto pr-1">
-          <!-- Itens entram aqui -->
-        </div>
+  <!-- MODAL DO CARRINHO E FINALIZAÇÃO DE PEDIDO -->
+  <div id="modal-carrinho" class="fixed inset-0 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-gray-900 border border-gray-800 rounded-3xl w-full max-w-lg p-6 max-h-[90vh] flex flex-col shadow-2xl">
+      
+      <div class="flex justify-between items-center pb-4 border-b border-gray-800">
+        <h3 class="text-lg font-black text-white flex items-center gap-2">🛒 Seu Carrinho</h3>
+        <button onclick="fecharModalCarrinho()" class="text-gray-400 hover:text-white text-xl font-bold px-2">✕</button>
       </div>
 
-      <!-- Formulário de Checkout e Finalização -->
-      <div class="border-t border-gray-800 pt-4 space-y-3">
-        <div class="flex justify-between items-center text-lg font-black text-white">
-          <span>Total:</span>
-          <span id="carrinho-total" class="text-orange-500">€ 0,00</span>
+      <!-- LISTA DE ITENS NO CARRINHO -->
+      <div id="lista-carrinho" class="py-4 overflow-y-auto space-y-3 flex-1"></div>
+
+      <!-- FORMULÁRIO DO CLIENTE -->
+      <form id="form-checkout" onsubmit="finalizarPedido(event)" class="border-t border-gray-800 pt-4 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-400 mb-1">Seu Nome</label>
+          <input type="text" id="cli-nome" placeholder="Ex: João Silva" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
         </div>
 
-        <!-- Campos do Cliente -->
-        <div class="space-y-2 text-xs">
-          <input type="text" id="cli-nome" placeholder="Seu Nome *" required class="w-full bg-gray-950 border border-gray-800 text-white p-3 rounded-xl outline-none focus:border-orange-500">
-          <input type="tel" id="cli-fone" placeholder="Telefone / WhatsApp *" required class="w-full bg-gray-950 border border-gray-800 text-white p-3 rounded-xl outline-none focus:border-orange-500">
-          <input type="text" id="cli-endereco" placeholder="Endereço de Entrega (Rua, Nº, Apto) *" required class="w-full bg-gray-950 border border-gray-800 text-white p-3 rounded-xl outline-none focus:border-orange-500">
-          
-          <select id="cli-pagamento" class="w-full bg-gray-950 border border-gray-800 text-white p-3 rounded-xl outline-none focus:border-orange-500">
-            <option value="Dinheiro">Pagamento em Dinheiro</option>
-            <option value="Cartão de Crédito/Débito">Cartão de Crédito / Débito</option>
-            <option value="MBWay / PIX">MBWay / Transferência</option>
+        <div>
+          <label class="block text-xs font-bold text-gray-400 mb-1">Telefone / WhatsApp</label>
+          <input type="tel" id="cli-tel" placeholder="Ex: +351 912 345 678" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-400 mb-1">Forma de Pagamento</label>
+          <select id="cli-pagamento" required class="w-full bg-gray-950 border border-gray-800 text-white px-3 py-2.5 rounded-xl text-sm outline-none focus:border-orange-500">
+            <option value="Dinheiro">💶 Dinheiro</option>
+            <option value="Cartão de Crédito/Débito">💳 Cartão de Crédito / Débito</option>
+            <option value="MB Way / Transferência">📱 MB Way / App</option>
           </select>
         </div>
 
-        <button id="btn-finalizar" onclick="finalizarPedido()" class="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-3.5 rounded-xl text-sm transition shadow-lg shadow-green-600/30 flex items-center justify-center gap-2">
-          <span>🚀</span> Finalizar e Enviar no WhatsApp
+        <div class="flex justify-between items-center py-2">
+          <span class="text-sm font-bold text-gray-400">Total a Pagar:</span>
+          <span id="modal-carrinho-total" class="text-2xl font-black text-orange-500">€ 0,00</span>
+        </div>
+
+        <button type="submit" id="btn-finalizar" class="w-full bg-green-600 hover:bg-green-500 text-white font-extrabold py-3.5 rounded-xl transition text-sm shadow-lg shadow-green-600/20">
+          ✅ Confirmar e Enviar Pedido
         </button>
-      </div>
+      </form>
 
     </div>
   </div>
 
+  <!-- SCRIPT LÓGICA PRINCIPAL -->
   <script>
-    // -------------------------------------------------------------
-    // CONFIGURAÇÃO SUPABASE E ESTADO GLOBAL
-    // -------------------------------------------------------------
     const SUPABASE_URL = "https://shiexpkmmiwsaspdqbok.supabase.co"; 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWV4cGttbWl3c2FzcGRxYm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NjAxMDksImV4cCI6MjEwMjIzNjEwOX0.auQyqT0xh7fsNwKEmN5wG7VTdXgeg6EUUpocC9xtDAQ"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let produtosCache = [];
-    let categoriasCache = [];
+    let cacheProdutos = [];
+    let cacheCategorias = [];
     let carrinho = [];
     let lojaAberta = true;
-    let whatsappEmpresa = "351962634522";
 
     document.addEventListener('DOMContentLoaded', async () => {
-      await verificarStatusLoja();
+      await checarStatusLoja();
       await carregarCategorias();
       await carregarProdutos();
     });
 
-    // -------------------------------------------------------------
-    // VERIFICAÇÃO DO STATUS DA LOJA (ABERTA / FECHADA)
-    // -------------------------------------------------------------
-    async function verificarStatusLoja() {
-      const { data } = await _supabase.from('configuracoes').select('*').eq('id', 1).single();
-      
-      const badge = document.getElementById('badge-status-loja');
+    async function checarStatusLoja() {
+      const badge = document.getElementById('badge-loja');
       const alerta = document.getElementById('alerta-loja-fechada');
 
-      if (data) {
-        lojaAberta = data.loja_aberta;
-        if(data.whatsapp_numero) whatsappEmpresa = data.whatsapp_numero;
-      }
+      const { data } = await _supabase.from('configuracoes').select('loja_aberta').eq('id', 1).maybeSingle();
+
+      lojaAberta = data ? data.loja_aberta : true;
 
       if (lojaAberta) {
-        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-green-500/30 bg-green-500/10 text-xs font-bold text-green-400";
-        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span> Aberto Agora`;
+        badge.className = "px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/30";
+        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span> Loja ABERTA`;
         alerta.classList.add('hidden');
       } else {
-        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-red-500/30 bg-red-500/10 text-xs font-bold text-red-400";
-        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Fechado`;
+        badge.className = "px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 bg-red-500/10 text-red-400 border border-red-500/30";
+        badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Loja FECHADA`;
         alerta.classList.remove('hidden');
       }
     }
 
-    // -------------------------------------------------------------
-    // CARREGAMENTO DO CARDÁPIO
-    // -------------------------------------------------------------
+    // MAPA DE ÍCONES AUTOMÁTICOS PARA CATEGORIAS
+    function obterIconeCategoria(nome) {
+      const n = nome.toLowerCase();
+      if (n.includes('burger') || n.includes('hambú')) return '🍔';
+      if (n.includes('bebida') || n.includes('refri') || n.includes('suco')) return '🥤';
+      if (n.includes('porção') || n.includes('batata') || n.includes('frita')) return '🍟';
+      if (n.includes('sobremesa') || n.includes('doce') || n.includes('sorvete')) return '🍦';
+      if (n.includes('combo') || n.includes('promoc')) return '⚡';
+      if (n.includes('molho') || n.includes('extra')) return '🧀';
+      return '🍽️';
+    }
+
     async function carregarCategorias() {
       const { data } = await _supabase.from('categorias').select('*').order('nome');
-      categoriasCache = data || [];
-
+      cacheCategorias = data || [];
+      
       const container = document.getElementById('container-categorias');
-      categoriasCache.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.className = "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-900 text-gray-400 border border-gray-800 hover:text-white transition";
-        btn.innerText = cat.nome;
-        btn.onclick = () => filtrarCategoria(cat.id, btn);
-        container.appendChild(btn);
-      });
+      container.innerHTML = `
+        <button onclick="filtrarCategoria('todas')" id="cat-todas" class="btn-cat group snap-start flex items-center gap-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 py-3 rounded-2xl text-xs font-black whitespace-nowrap shadow-lg shadow-orange-500/25 border border-orange-400/30 transition-all duration-300 transform scale-105">
+          <span class="text-base group-hover:scale-110 transition-transform">🔥</span>
+          <span>Todas</span>
+        </button>
+      ` + cacheCategorias.map(c => {
+        const icone = obterIconeCategoria(c.nome);
+        return `
+          <button onclick="filtrarCategoria('${c.id}')" id="cat-${c.id}" class="btn-cat group snap-start flex items-center gap-2.5 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap border border-gray-800 hover:border-gray-700 transition-all duration-200">
+            <span class="text-base group-hover:scale-110 transition-transform">${icone}</span>
+            <span>${c.nome}</span>
+          </button>
+        `;
+      }).join('');
     }
 
     async function carregarProdutos() {
-      const { data } = await _supabase.from('produtos').select('*').eq('disponivel', true).order('nome');
-      produtosCache = data || [];
-      renderizarProdutos(produtosCache);
+      const { data } = await _supabase.from('produtos').select('*').eq('disponivel', true).order('created_at', { ascending: false });
+      cacheProdutos = data || [];
+      renderizarProdutos(cacheProdutos);
     }
 
-  function renderizarProdutos(lista) {
-  const grid = document.getElementById('grid-produtos');
-  if (!grid) return;
-  
-  if (!lista || lista.length === 0) {
-    grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">Nenhum item disponível nesta categoria.</p>`;
-    return;
-  }
+    function renderizarProdutos(lista) {
+      const grid = document.getElementById('grid-produtos');
+      if (!grid) return;
 
-  // Verifica com segurança se a loja está aberta (padrão true se ainda não carregou)
-  const estaAberta = typeof lojaAberta !== 'undefined' ? lojaAberta : true;
+      if (!lista || lista.length === 0) {
+        grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-12">Nenhum item disponível nesta categoria.</p>`;
+        return;
+      }
 
-  grid.innerHTML = lista.map(p => `
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-orange-500/40 transition group shadow-lg">
-      <div>
-        <!-- FOTO SEM CORTAR E BEM ENQUADRADA -->
-        <div class="h-52 w-full bg-gray-950/80 p-3 flex items-center justify-center border-b border-gray-800/50 relative overflow-hidden">
-          <img 
-            src="${p.imagem_url || 'https://via.placeholder.com/300'}" 
-            class="max-h-full max-w-full object-contain rounded-xl group-hover:scale-105 transition duration-300 drop-shadow-md" 
-            alt="${p.nome}"
-            onerror="this.src='https://via.placeholder.com/300'"
-          >
-        </div>
-
-        <!-- DETALHES -->
-        <div class="p-5">
-          <h3 class="font-extrabold text-lg text-white mb-1 leading-snug">${p.nome}</h3>
-          <p class="text-xs text-gray-400 line-clamp-2 mb-2 leading-relaxed">${p.descricao || 'Sem descrição.'}</p>
-        </div>
-      </div>
-
-      <!-- PREÇO E BOTÃO -->
-      <div class="px-5 pb-5 flex items-center justify-between mt-auto">
-        <span class="text-xl font-black text-orange-500">€ ${Number(p.preco || 0).toFixed(2)}</span>
-        <button onclick="adicionarAoCarrinho('${p.id}')" ${!estaAberta ? 'disabled' : ''} 
-          class="${estaAberta ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20' : 'bg-gray-800 text-gray-500 cursor-not-allowed'} px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-1 shadow-lg">
-          <span>+</span> Adicionar
-        </button>
-      </div>
-    </div>
-  `).join('');
-}
-
-  grid.innerHTML = lista.map(p => `
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-orange-500/40 transition group shadow-lg">
-      <div>
-        <!-- CONTAINER DA FOTO COM AJUSTE PERFEITO (SEM CORTAR) -->
-        <div class="h-52 w-full bg-gray-950/80 p-3 flex items-center justify-center border-b border-gray-800/50 relative overflow-hidden">
-          <img 
-            src="${p.imagem_url || 'https://via.placeholder.com/300'}" 
-            class="max-h-full max-w-full object-contain rounded-xl group-hover:scale-105 transition duration-300 drop-shadow-md" 
-            alt="${p.nome}"
-          >
-        </div>
-
-        <!-- DETALHES DO PRODUTO -->
-        <div class="p-5">
-          <h3 class="font-extrabold text-lg text-white mb-1 leading-snug">${p.nome}</h3>
-          <p class="text-xs text-gray-400 line-clamp-2 mb-2 leading-relaxed">${p.descricao || 'Sem descrição.'}</p>
-        </div>
-      </div>
-
-      <!-- PREÇO E BOTÃO -->
-      <div class="px-5 pb-5 flex items-center justify-between mt-auto">
-        <span class="text-xl font-black text-orange-500">€ ${Number(p.preco).toFixed(2)}</span>
-        <button onclick="adicionarAoCarrinho('${p.id}')" ${!lojaAberta ? 'disabled' : ''} 
-          class="${lojaAberta ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20' : 'bg-gray-800 text-gray-500 cursor-not-allowed'} px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-1 shadow-lg">
-          <span>+</span> Adicionar
-        </button>
-      </div>
-    </div>
-  `).join('');
-}
       grid.innerHTML = lista.map(p => `
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-orange-500/40 transition group">
+        <div class="bg-gray-900 border border-gray-800/80 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-orange-500/40 transition duration-300 group shadow-xl hover:shadow-2xl hover:shadow-orange-500/5">
           <div>
-            <div class="h-48 w-full bg-gray-950 relative overflow-hidden">
-              <img src="${p.imagem_url || 'https://via.placeholder.com/300'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="${p.nome}">
+            <div class="h-52 w-full bg-gray-950/80 p-3 flex items-center justify-center border-b border-gray-800/50 relative overflow-hidden">
+              <img 
+                src="${p.imagem_url || 'https://via.placeholder.com/300'}" 
+                class="max-h-full max-w-full object-contain rounded-2xl group-hover:scale-105 transition duration-300 drop-shadow-lg" 
+                alt="${p.nome}"
+                onerror="this.src='https://via.placeholder.com/300'"
+              >
             </div>
+
             <div class="p-5">
-              <h3 class="font-extrabold text-lg text-white mb-1">${p.nome}</h3>
-              <p class="text-xs text-gray-400 line-clamp-2 mb-4">${p.descricao || 'Sem descrição.'}</p>
+              <h3 class="font-extrabold text-lg text-white mb-1.5 leading-snug group-hover:text-orange-400 transition">${p.nome}</h3>
+              <p class="text-xs text-gray-400 line-clamp-2 mb-2 leading-relaxed">${p.descricao || 'Sem descrição.'}</p>
             </div>
           </div>
-          <div class="px-5 pb-5 flex items-center justify-between">
-            <span class="text-xl font-black text-orange-500">€ ${Number(p.preco).toFixed(2)}</span>
+
+          <div class="px-5 pb-5 flex items-center justify-between mt-auto">
+            <span class="text-xl font-black text-orange-500">€ ${Number(p.preco || 0).toFixed(2)}</span>
             <button onclick="adicionarAoCarrinho('${p.id}')" ${!lojaAberta ? 'disabled' : ''} 
-              class="${lojaAberta ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-800 text-gray-500 cursor-not-allowed'} px-4 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1 shadow-lg">
+              class="${lojaAberta ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20 active:scale-95' : 'bg-gray-800 text-gray-500 cursor-not-allowed'} px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-1 shadow-lg">
               <span>+</span> Adicionar
             </button>
           </div>
@@ -302,159 +266,153 @@
       `).join('');
     }
 
-    function filtrarCategoria(catId, btnElement = null) {
-      if (btnElement) {
-        document.querySelectorAll('#container-categorias button').forEach(b => {
-          b.className = "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-900 text-gray-400 border border-gray-800 hover:text-white transition";
-        });
-        btnElement.className = "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-orange-500 text-white shadow-lg shadow-orange-500/30";
+    function filtrarCategoria(catId) {
+      document.querySelectorAll('.btn-cat').forEach(b => {
+        b.className = "btn-cat group snap-start flex items-center gap-2.5 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap border border-gray-800 hover:border-gray-700 transition-all duration-200";
+      });
+
+      const btnAtivo = document.getElementById(catId === 'todas' ? 'cat-todas' : `cat-${catId}`);
+      if (btnAtivo) {
+        btnAtivo.className = "btn-cat group snap-start flex items-center gap-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 py-3 rounded-2xl text-xs font-black whitespace-nowrap shadow-lg shadow-orange-500/25 border border-orange-400/30 transition-all duration-300 transform scale-105";
       }
 
-      if(catId === 'todas') {
-        renderizarProdutos(produtosCache);
+      if (catId === 'todas') {
+        document.getElementById('titulo-categoria').innerHTML = `<span>🔥</span> Todas as Opções`;
+        renderizarProdutos(cacheProdutos);
       } else {
-        const filtrados = produtosCache.filter(p => p.categoria_id === catId);
+        const cat = cacheCategorias.find(c => c.id === catId);
+        const nomeCat = cat ? cat.nome : 'Cardápio';
+        const icone = obterIconeCategoria(nomeCat);
+        
+        document.getElementById('titulo-categoria').innerHTML = `<span>${icone}</span> ${nomeCat}`;
+        const filtrados = cacheProdutos.filter(p => p.categoria_id === catId);
         renderizarProdutos(filtrados);
       }
     }
 
-    // -------------------------------------------------------------
-    // GERENCIAMENTO DO CARRINHO DE COMPRAS
-    // -------------------------------------------------------------
-    function adicionarAoCarrinho(id) {
-      if(!lojaAberta) {
+    function adicionarAoCarrinho(prodId) {
+      if (!lojaAberta) {
         alert("A loja está fechada no momento!");
         return;
       }
 
-      const produto = produtosCache.find(p => p.id === id);
-      if(!produto) return;
+      const prod = cacheProdutos.find(p => p.id === prodId);
+      if (!prod) return;
 
-      const itemExistente = carrinho.find(item => item.id === id);
-      if(itemExistente) {
-        itemExistente.qtd++;
+      const itemExistente = carrinho.find(i => i.id === prodId);
+      if (itemExistente) {
+        itemExistente.qtd += 1;
       } else {
-        carrinho.push({ ...produto, qtd: 1 });
+        carrinho.push({ id: prod.id, nome: prod.nome, preco: Number(prod.preco), qtd: 1 });
       }
 
       atualizarCarrinhoUI();
-      abrirCarrinho();
     }
 
-    function alterarQtd(id, delta) {
-      const item = carrinho.find(i => i.id === id);
-      if(!item) return;
+    function alterarQtd(prodId, delta) {
+      const item = carrinho.find(i => i.id === prodId);
+      if (!item) return;
 
       item.qtd += delta;
-      if(item.qtd <= 0) {
-        carrinho = carrinho.filter(i => i.id !== id);
+      if (item.qtd <= 0) {
+        carrinho = carrinho.filter(i => i.id !== prodId);
       }
 
       atualizarCarrinhoUI();
+      renderizarListaCarrinhoModal();
     }
 
     function atualizarCarrinhoUI() {
-      const container = document.getElementById('itens-carrinho');
-      const badgeCount = document.getElementById('carrinho-qtd-badge');
-      const totalEl = document.getElementById('carrinho-total');
+      const total = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+      const qtdTotal = carrinho.reduce((sum, item) => sum + item.qtd, 0);
 
-      const totalQtd = carrinho.reduce((acc, i) => acc + i.qtd, 0);
-      const valorTotal = carrinho.reduce((acc, i) => acc + (i.preco * i.qtd), 0);
+      document.getElementById('carrinho-total').innerText = `€ ${total.toFixed(2)}`;
+      document.getElementById('modal-carrinho-total').innerText = `€ ${total.toFixed(2)}`;
+      document.getElementById('carrinho-qtd').innerText = qtdTotal;
 
-      badgeCount.innerText = totalQtd;
-      totalEl.innerText = `€ ${valorTotal.toFixed(2)}`;
+      const barra = document.getElementById('barra-carrinho');
+      if (qtdTotal > 0) {
+        barra.classList.remove('translate-y-full');
+      } else {
+        barra.classList.add('translate-y-full');
+        fecharModalCarrinho();
+      }
+    }
 
-      if(carrinho.length === 0) {
-        container.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">Seu carrinho está vazio.</p>`;
+    function abrirModalCarrinho() {
+      renderizarListaCarrinhoModal();
+      document.getElementById('modal-carrinho').classList.remove('hidden');
+    }
+
+    function fecharModalCarrinho() {
+      document.getElementById('modal-carrinho').classList.add('hidden');
+    }
+
+    function renderizarListaCarrinhoModal() {
+      const container = document.getElementById('lista-carrinho');
+      
+      if (carrinho.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 py-6 text-sm">Seu carrinho está vazio.</p>`;
         return;
       }
 
-      container.innerHTML = carrinho.map(item => `
-        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 flex items-center justify-between">
+      container.innerHTML = carrinho.map(i => `
+        <div class="flex justify-between items-center bg-gray-950 p-3.5 rounded-2xl border border-gray-800">
           <div>
-            <h4 class="font-bold text-sm text-white">${item.nome}</h4>
-            <span class="text-xs text-orange-400 font-semibold">€ ${(item.preco * item.qtd).toFixed(2)}</span>
+            <p class="font-extrabold text-sm text-white">${i.nome}</p>
+            <p class="text-xs text-orange-500 font-bold">€ ${i.preco.toFixed(2)} un.</p>
           </div>
-          <div class="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-lg p-1">
-            <button onclick="alterarQtd('${item.id}', -1)" class="w-6 h-6 text-xs text-gray-400 hover:text-white font-bold">-</button>
-            <span class="text-xs font-bold text-white px-1">${item.qtd}</span>
-            <button onclick="alterarQtd('${item.id}', 1)" class="w-6 h-6 text-xs text-gray-400 hover:text-white font-bold">+</button>
+          <div class="flex items-center gap-3">
+            <button onclick="alterarQtd('${i.id}', -1)" class="w-7 h-7 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-xs font-bold transition">-</button>
+            <span class="text-sm font-extrabold text-white">${i.qtd}</span>
+            <button onclick="alterarQtd('${i.id}', 1)" class="w-7 h-7 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition">+</button>
           </div>
         </div>
       `).join('');
     }
 
-    function abrirCarrinho() { document.getElementById('modal-carrinho').classList.remove('hidden'); }
-    function fecharCarrinho() { document.getElementById('modal-carrinho').classList.add('hidden'); }
+    async function finalizarPedido(e) {
+      e.preventDefault();
 
-    // -------------------------------------------------------------
-    // FINALIZAÇÃO DE PEDIDO (BANCO DE DADOS + WHATSAPP)
-    // -------------------------------------------------------------
-    async function finalizarPedido() {
-      if(!lojaAberta) {
-        alert("A loja está fechada. Não é possível enviar pedidos agora.");
-        return;
-      }
+      if (carrinho.length === 0) return;
 
-      if(carrinho.length === 0) {
-        alert("Adicione pelo menos um item ao carrinho!");
-        return;
-      }
+      const btn = document.getElementById('btn-finalizar');
+      btn.disabled = true;
+      btn.innerText = "Processando Pedido...";
 
-      const nome = document.getElementById('cli-nome').value.trim();
-      const fone = document.getElementById('cli-fone').value.trim();
-      const endereco = document.getElementById('cli-endereco').value.trim();
-      const pagamento = document.getElementById('cli-pagamento').value;
+      const clienteNome = document.getElementById('cli-nome').value;
+      const clienteTel = document.getElementById('cli-tel').value;
+      const formaPagamento = document.getElementById('cli-pagamento').value;
+      const total = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+      const numeroPedido = Math.floor(1000 + Math.random() * 9000);
 
-      if(!nome || !fone || !endereco) {
-        alert("Por favor, preencha todos os campos obrigatórios (*).");
-        return;
-      }
-
-      const total = carrinho.reduce((acc, i) => acc + (i.preco * i.qtd), 0);
-      const numeroPedido = Math.floor(1000 + Math.random() * 9000); // Gera # de pedido ex: 4832
-
-      const pedidoPayload = {
+      const novoPedido = {
         numero_pedido: numeroPedido,
-        cliente_nome: nome,
-        cliente_telefone: fone,
-        cliente_endereco: endereco,
-        forma_pagamento: pagamento,
-        itens: carrinho.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd, preco: i.preco })),
+        cliente_nome: clienteNome,
+        cliente_telefone: clienteTel,
+        forma_pagamento: formaPagamento,
+        itens: carrinho,
         total: total,
         status: 'Pendente'
       };
 
-      // 1. Grava o pedido no banco do Supabase para a tela Admin
-      const { error } = await _supabase.from('pedidos').insert([pedidoPayload]);
+      const { error } = await _supabase.from('pedidos').insert([novoPedido]);
 
       if (error) {
-        alert("Ocorreu um erro ao salvar o pedido no banco. Tente novamente.");
+        alert("Erro ao gravar pedido. Tente novamente.");
         console.error(error);
+        btn.disabled = false;
+        btn.innerText = "✅ Confirmar e Enviar Pedido";
         return;
       }
 
-      // 2. Monta texto para envio via WhatsApp
-      let textoMsg = `🍔 *NOVO PEDIDO #${numeroPedido} - BURGER STUDIO*\n\n`;
-      textoMsg += `👤 *Cliente:* ${nome}\n`;
-      textoMsg += `📞 *Telefone:* ${fone}\n`;
-      textoMsg += `📍 *Endereço:* ${endereco}\n`;
-      textoMsg += `💳 *Pagamento:* ${pagamento}\n\n`;
-      textoMsg += `📝 *ITENS DO PEDIDO:*\n`;
-
-      carrinho.forEach(item => {
-        textoMsg += `• ${item.qtd}x ${item.nome} - € ${(item.preco * item.qtd).toFixed(2)}\n`;
-      });
-
-      textoMsg += `\n💰 *TOTAL:* € ${total.toFixed(2)}`;
-
-      // 3. Limpa o carrinho e redireciona ao WhatsApp
       carrinho = [];
       atualizarCarrinhoUI();
-      fecharCarrinho();
+      fecharModalCarrinho();
+      btn.disabled = false;
+      btn.innerText = "✅ Confirmar e Enviar Pedido";
 
-      const urlWhatsapp = `https://wa.me/${whatsappEmpresa}?text=${encodeURIComponent(textoMsg)}`;
-      window.open(urlWhatsapp, '_blank');
+      alert(`Pedido #${numeroPedido} enviado com sucesso!`);
     }
   </script>
 </body>
